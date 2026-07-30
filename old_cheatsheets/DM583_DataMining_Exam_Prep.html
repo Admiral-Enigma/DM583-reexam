@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DM583 Data Mining — MCQ Exam Prep</title>
+<style>
+  :root{
+    --bg:#0f1419; --panel:#171f29; --panel2:#1e2935; --ink:#e8eef4; --muted:#93a4b5;
+    --line:#2a3744; --accent:#4ea1ff; --accent2:#7c5cff; --good:#3ecf8e; --bad:#ff6b6b;
+    --warn:#ffb454; --chip:#22303d;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:linear-gradient(180deg,#0d1217,#0f1419 30%);
+    color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:0 0 80px;
+  }
+  header{
+    position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);
+    background:rgba(15,20,25,.86);border-bottom:1px solid var(--line);
+    padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  header h1{font-size:17px;margin:0;letter-spacing:.3px}
+  header h1 span{color:var(--accent)}
+  .wrap{max-width:920px;margin:0 auto;padding:0 18px}
+  .sub{color:var(--muted);font-size:12.5px}
+  .stats{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px}
+  .stat b{color:var(--ink)} .stat{color:var(--muted)}
+  .bar{height:6px;background:var(--panel2);border-radius:5px;overflow:hidden;width:140px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%}
+
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0 6px}
+  select,button{
+    font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);
+    border-radius:9px;padding:9px 13px;cursor:pointer;transition:.15s;
+  }
+  select:hover,button:hover{border-color:var(--accent)}
+  button.primary{background:linear-gradient(120deg,var(--accent),var(--accent2));border:none;color:#fff;font-weight:600}
+  button.ghost{background:transparent}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{border:none;border-radius:0;background:transparent;padding:9px 14px}
+  .seg button.on{background:var(--accent);color:#fff}
+
+  .meta{display:flex;justify-content:space-between;align-items:center;margin:10px 0;color:var(--muted);font-size:13px}
+
+  .q{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:14px 0;box-shadow:0 1px 0 rgba(255,255,255,.02)}
+  .qtop{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+  .chip{font-size:11px;background:var(--chip);color:var(--muted);border:1px solid var(--line);padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .qnum{font-size:12px;color:var(--muted);margin-left:auto}
+  .qtext{font-size:15.5px;font-weight:500;margin:2px 0 14px}
+  .qtext code,.exp code{background:#0c1117;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px;color:#cfe3ff}
+  .opt{
+    display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);background:var(--panel2);
+    border-radius:10px;padding:11px 13px;margin:8px 0;cursor:pointer;transition:.12s;
+  }
+  .opt:hover{border-color:var(--accent)}
+  .opt .key{flex:0 0 24px;height:24px;border-radius:6px;background:var(--chip);display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--muted)}
+  .opt.correct{border-color:var(--good);background:rgba(62,207,142,.10)}
+  .opt.correct .key{background:var(--good);color:#06231a}
+  .opt.wrong{border-color:var(--bad);background:rgba(255,107,107,.10)}
+  .opt.wrong .key{background:var(--bad);color:#2a0808}
+  .opt.lock{cursor:default}
+  .exp{margin-top:12px;border-top:1px dashed var(--line);padding-top:11px;color:#c7d6e3;font-size:13.5px;display:none}
+  .exp.show{display:block}
+  .exp b{color:var(--good)}
+  .verdict{font-weight:700;margin-bottom:4px}
+  .verdict.ok{color:var(--good)} .verdict.no{color:var(--bad)}
+
+  .result{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;text-align:center;margin:18px 0}
+  .result .big{font-size:42px;font-weight:800;letter-spacing:1px}
+  .result .pct{color:var(--muted)}
+  .empty{color:var(--muted);text-align:center;padding:40px}
+
+  .tabbtn{padding:9px 14px}
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(15,20,25,.92);border-top:1px solid var(--line);backdrop-filter:blur(8px);padding:10px 18px}
+  .fwrap{max-width:920px;margin:0 auto;display:flex;gap:10px;align-items:center;justify-content:space-between}
+
+  /* formula sheet */
+  .sheet h2{font-size:15px;color:var(--accent);border-bottom:1px solid var(--line);padding-bottom:6px;margin:26px 0 8px}
+  .sheet table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+  .sheet td{border:1px solid var(--line);padding:8px 10px;vertical-align:top}
+  .sheet td:first-child{color:var(--accent);white-space:nowrap;width:1%;font-weight:600}
+  .sheet .f{font-family:ui-monospace,Menlo,Consolas,monospace;color:#cfe3ff}
+  .pill{display:inline-block;font-size:11px;background:var(--chip);border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0}
+  .hidden{display:none}
+  a{color:var(--accent)}
+  .note{font-size:12.5px;color:var(--muted);background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:10px 12px;margin:10px 0}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1><span>DM583</span> Data Mining — Exam Prep</h1>
+    <div class="sub">Campello / Zimek · MCQ trainer + formula sheet</div>
+  </div>
+  <div class="stats">
+    <div class="stat">Answered <b id="sAns">0</b>/<b id="sTot">0</b></div>
+    <div class="stat">Correct <b id="sCor">0</b></div>
+    <div class="bar"><i id="sBar"></i></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="seg" style="margin-top:18px">
+    <button class="tabbtn on" data-tab="quiz">Quiz</button>
+    <button class="tabbtn" data-tab="sheet">Formula sheet</button>
+  </div>
+
+  <!-- QUIZ TAB -->
+  <div id="tab-quiz">
+    <div class="controls">
+      <select id="topic"><option value="all">All topics</option></select>
+      <div class="seg">
+        <button id="modeAll" class="on">Show all</button>
+        <button id="modeOne">One-by-one</button>
+      </div>
+      <button id="shuffle" class="ghost">🔀 Shuffle</button>
+      <button id="reset" class="ghost">↺ Reset answers</button>
+      <button id="onlyWrong" class="ghost">Review wrong</button>
+    </div>
+    <div class="meta">
+      <span id="count">—</span>
+      <span id="filterLabel"></span>
+    </div>
+    <div id="list"></div>
+  </div>
+
+  <!-- SHEET TAB -->
+  <div id="tab-sheet" class="hidden sheet"></div>
+</div>
+
+<footer>
+  <div class="fwrap">
+    <div class="sub" id="ftLeft">Tip: answer, read the explanation, then hit <b>Review wrong</b> before the exam.</div>
+    <div style="display:flex;gap:10px">
+      <button id="prevBtn" class="ghost hidden">‹ Prev</button>
+      <button id="nextBtn" class="primary hidden">Next ›</button>
+      <button id="gradeBtn" class="primary hidden">See score</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* DM583 question bank. answer = index of correct option (0-based). */
+const QUESTIONS = [
+/* ===================== INTRODUCTION ===================== */
+{t:"Introduction",q:"Which best matches the classic KDD definition (Fayyad et al., 1996)?",
+o:["Any automated search query over a relational database","The nontrivial process of identifying valid, novel, potentially useful, and ultimately understandable patterns in data","A supervised method that always requires labelled training data","Storing huge datasets in a structured target database"],
+a:1,e:"KDD = the <b>nontrivial process</b> of identifying <b>valid, novel, potentially useful, and ultimately understandable</b> patterns. 'Nontrivial' means more than search, inference or simple aggregation."},
+
+{t:"Introduction",q:"Clustering, outlier detection and association-rule mining are examples of:",
+o:["Supervised learning","Reinforcement learning","Unsupervised learning","Semi-supervised regression"],
+a:2,e:"They learn patterns from the input variables X only, with no dependent/output variable Y acting as a 'teacher' — i.e. unsupervised learning."},
+
+{t:"Introduction",q:"In a supervised task, what distinguishes regression from classification?",
+o:["Regression has no output variable","In regression Y is real-valued/continuous; in classification Y is categorical","Classification cannot use predictors X","Regression is unsupervised, classification is supervised"],
+a:1,e:"Both model Y = f(X)+ε. In regression the dependent variable Y is numeric/continuous; in classification Y takes a finite set of nominal class labels."},
+
+{t:"Introduction",q:"Clustering is sometimes referred to as:",
+o:["Unsupervised classification","Supervised regression","Dimensionality reduction","Hypothesis testing"],
+a:0,e:"Because it groups similar observations without using class labels, clustering is sometimes called 'unsupervised classification'."},
+
+{t:"Introduction",q:"How does the ML perspective on a task like classification typically differ from the broader DM perspective?",
+o:["ML never uses training data","DM ignores prediction entirely","ML focuses mostly on prediction power/effectiveness; DM may also ask which predictors matter and what the model tells us about the domain","They are identical in every respect"],
+a:2,e:"ML often treats models as black boxes optimised for predictive effectiveness, whereas DM may extend to interpretability: which predictors influence the output and what the model reveals about the domain."},
+
+/* ===================== DATA REPRESENTATION ===================== */
+{t:"Data Representation",q:"Which set of operations is meaningful for an ORDINAL variable (and only these)?",
+o:["= and ≠ only","=, ≠, <, >, ≤, ≥","=, ≠, +, −, ×, ÷","All arithmetic plus logarithms"],
+a:1,e:"Nominal: only =,≠. Ordinal: adds order comparisons <,>,≤,≥. Numerical: adds arithmetic +,−,×,÷."},
+
+{t:"Data Representation",q:"A variable is called ASYMMETRIC when:",
+o:["It has exactly two values","Only certain values (typically non-zero) are informative","Its histogram is skewed","It is always continuous"],
+a:1,e:"For an asymmetric variable only certain values matter (usually the non-zero ones, e.g. presence of a word/item). This underlies sparse data; zeros carry no information."},
+
+{t:"Data Representation",q:"Postal code stored as a number should be treated as which type?",
+o:["Continuous numerical","Discrete numerical you can average","Nominal (categorical) — arithmetic is meaningless","Ordinal"],
+a:2,e:"Although written with digits, a postal code is just a label/identifier: averaging or ordering it is meaningless, so it is nominal."},
+
+{t:"Data Representation",q:"Compute the Euclidean distance between x1=[2,−1,1,0] and x2=[7,0,−4,8].",
+o:["19","8","√115 ≈ 10.72","115"],
+a:2,e:"√((2−7)²+(−1−0)²+(1−(−4))²+(0−8)²) = √(25+1+25+64) = √115 ≈ 10.72."},
+
+{t:"Data Representation",q:"Manhattan distance between x1=[2,−1,1,0] and x2=[7,0,−4,8] equals:",
+o:["19","10.72","8","√115"],
+a:0,e:"|2−7|+|−1−0|+|1−(−4)|+|0−8| = 5+1+5+8 = 19. Manhattan = sum of absolute differences (norm-1)."},
+
+{t:"Data Representation",q:"The Suprema (Chebyshev) distance is the Minkowski distance with:",
+o:["p = 1","p = 2","p → ∞","p = 0"],
+a:2,e:"As p→∞ the Minkowski distance tends to max_k|x_ik − x_jk|, the Suprema/Chebyshev distance. p=1 gives Manhattan, p=2 gives Euclidean."},
+
+{t:"Data Representation",q:"Which property must hold for a dissimilarity to be called a METRIC (beyond non-negativity, identity and symmetry)?",
+o:["Cosine = 1","Triangle inequality: d(x,y) ≤ d(x,z)+d(z,y)","d must be bounded by 1","Pearson correlation = 0"],
+a:1,e:"A metric additionally satisfies the triangle inequality d(x1,x2) ≤ d(x1,x3)+d(x3,x2). This matters for some pruning/indexing algorithms."},
+
+{t:"Data Representation",q:"Why can re-scaling/standardisation matter before computing Euclidean distance?",
+o:["It makes data categorical","Variables with wider ranges tend to dominate the distance (implicit pre-weighting)","It guarantees the triangle inequality","It removes the need for a distance function"],
+a:1,e:"Variables ranging over wider intervals dominate distance computations. Re-scaling (e.g. [0,1] or z-score) removes this artificial pre-weighting so variables count equally."},
+
+{t:"Data Representation",q:"The z-score standardisation of value x_ij uses:",
+o:["(x − min)/(max − min)","(x − mean)/std","x / max","1/(1+x)"],
+a:1,e:"z = (x_ij − mean_j)/std_j. Linear [0,1] rescaling instead is (x − min)/(max − min)."},
+
+{t:"Data Representation",q:"The Mahalanobis distance generalises Euclidean distance by:",
+o:["Ignoring the mean","Taking the covariance of the variables into account (ellipsoidal equidistant sets)","Using only absolute differences","Restricting to binary data"],
+a:1,e:"Mahalanobis uses the inverse covariance matrix, producing ellipsoidal (not spherical) equidistant sets — essentially Euclidean distance on a PCA-transformed space."},
+
+{t:"Data Representation",q:"Cosine similarity is especially appropriate for which kind of data?",
+o:["Sparse, asymmetric numerical data such as bag-of-words text","Ordinal survey responses","A single binary variable","Time-series that must be aligned"],
+a:0,e:"Cosine ignores zeros (absent terms) and measures the angle between vectors, ideal for sparse asymmetric bag-of-words representations. Appending a document to itself keeps cos=1."},
+
+{t:"Data Representation",q:"For p=[3,2,0,5,0,0,0,2,0,0] and q=[1,0,0,0,0,0,0,1,0,2], the inner product ⟨p,q⟩ is:",
+o:["0","5","42","6"],
+a:1,e:"⟨p,q⟩ = 3·1 + 2·0 + 5·0 + 2·1 = 5 (only positions 1 and 8 contribute)."},
+
+{t:"Data Representation",q:"Which correlation measure is more robust to outliers because it uses ranks instead of raw values?",
+o:["Pearson","Spearman","Cosine","Mahalanobis"],
+a:1,e:"Spearman replaces values by their ranks then computes Pearson, which makes it far less sensitive to extreme values than raw Pearson."},
+
+{t:"Data Representation",q:"Pearson correlation r(p,q) = +1 means:",
+o:["p and q are independent","Perfect positive linear correlation (same trend)","p and q are orthogonal","Maximum dissimilarity"],
+a:1,e:"r∈[−1,+1]: +1 perfect positive linear correlation, −1 perfect negative, 0 no linear correlation (expected when independent)."},
+
+{t:"Data Representation",q:"For two binary records, the Simple Matching Coefficient (SMC) is defined as:",
+o:["n11 / (n11+n10+n01)","(n11+n00) / (n11+n00+n10+n01)","n11 / n00","(n10+n01) / n"],
+a:1,e:"SMC = agreements / total = (n11+n00)/n. It counts 0-0 matches, so it suits SYMMETRIC binary variables."},
+
+{t:"Data Representation",q:"The Jaccard coefficient differs from SMC because it:",
+o:["Adds the n00 term","Removes the 0-0 matches (n00) from numerator and denominator","Uses squared differences","Requires ordinal data"],
+a:1,e:"Jc = n11/(n11+n10+n01). Dropping n00 makes it suitable for ASYMMETRIC binary variables (e.g. presence/absence of symptoms or items)."},
+
+{t:"Data Representation",q:"You compare students by which of 20 subjects they enrolled in (1=enrolled, 0=not). Which coefficient is appropriate?",
+o:["SMC, because 0-0 agreements matter","Jaccard, because only enrolment (1's) is informative","Euclidean distance directly","Pearson on the 0/1 values"],
+a:1,e:"Two students sharing 'not enrolled in subject X' is uninformative — these are asymmetric variables, so Jaccard (ignoring 0-0 matches) is the right choice."},
+
+{t:"Data Representation",q:"The recommended nominal-to-numeric conversion that avoids introducing false ordering/distance is:",
+o:["Assigning 1,2,3,… to the categories","One-hot (1-of-n) encoding","Taking the logarithm of category index","z-score of the category index"],
+a:1,e:"Mapping nominal values to 1,2,3 invents fake order/distances. One-hot encoding turns each value into its own binary (asymmetric) variable, keeping categories equidistant — at the cost of higher dimensionality."},
+
+{t:"Data Representation",q:"For an ordinal variable {Cool, Mild, Hot}, the suggested numeric conversion (rank−1)/(#values−1) gives Mild =",
+o:["0","0.5","1","2"],
+a:1,e:"Cool=0, Mild=(2−1)/(3−1)=0.5, Hot=1. This preserves order and equal spacing."},
+
+{t:"Data Representation",q:"Given a similarity s within [0,1], the simplest conversion to a dissimilarity is:",
+o:["d = 1/s","d = 1 − s","d = e^{−s}","d = s²"],
+a:1,e:"For values in [0,1], d = 1 − s (and s = 1 − d) just flips them without distortion. For unbounded distances use s = 1/(1+d) or e^{−d}."},
+
+/* ===================== PARTITIONING / K-MEANS ===================== */
+{t:"Partitioning (k-Means)",q:"Classic k-means represents each cluster by its ___ and assigns points using ___.",
+o:["medoid; Manhattan distance","centroid (mean); squared Euclidean distance","random member; cosine similarity","densest point; Mahalanobis distance"],
+a:1,e:"k-means uses the centroid (multivariate mean) as prototype and the squared Euclidean distance for assignment — it is a prototype-based, hard partitioning method."},
+
+{t:"Partitioning (k-Means)",q:"The objective function k-means minimises is the:",
+o:["Silhouette width","Sum of Squared Errors (within-cluster variances), SSE","Number of clusters k","Between-cluster distance only"],
+a:1,e:"k-means minimises SSE = Σ_c Σ_{x∈Cc} d(x, x̄c)² (within-cluster squared distances to the centroid)."},
+
+{t:"Partitioning (k-Means)",q:"k-means is guaranteed to find:",
+o:["The global optimum always","Only a local optimum — results depend on initial prototypes","The correct number of clusters automatically","The medoid-based solution"],
+a:1,e:"k-means converges to a local (not global) optimum; the final partition depends on the initial prototype placement. Hence multiple restarts are used."},
+
+{t:"Partitioning (k-Means)",q:"In the optimisation view, the k-means assignment step (E) and update step (M) respectively:",
+o:["Fix centroids and reassign points; fix assignments and recompute centroids as means","Both recompute centroids","Both reassign points","Increase k then decrease k"],
+a:0,e:"E-step: with centroids fixed, assign each point to the nearest centroid (β_cj=1 for smallest ‖x−x̄c‖²). M-step: with assignments fixed, set each centroid to its cluster mean."},
+
+{t:"Partitioning (k-Means)",q:"Which is NOT a limitation of standard k-means?",
+o:["Sensitive to initialisation (local optima)","Tends to find globular/volumetric clusters only","Can naturally handle nominal categorical data","Mean-based, so sensitive to outliers"],
+a:2,e:"k-means needs real-valued data (the mean must be defined) and does NOT handle nominal data naturally. The other three are genuine limitations."},
+
+{t:"Partitioning (k-Means)",q:"The computational complexity of one k-means run is approximately:",
+o:["O(N²)","O(N³)","O(N·n·k) per iteration","O(2^N)"],
+a:2,e:"Each iteration is O(N·n·k): N points × k centroids × n dimensions for the distance computations — linear in N, a key reason k-means scales well."},
+
+{t:"Partitioning (k-Means)",q:"Why can't SSE alone be used to choose the best k across solutions with DIFFERENT numbers of clusters?",
+o:["SSE is undefined for k>2","SSE tends to decrease monotonically as k increases","SSE only works for hierarchical methods","SSE ignores the centroids"],
+a:1,e:"For fixed k, lower SSE is better. But as k grows, SSE keeps decreasing (it hits 0 when k=N), so it can't be compared across different k — hence the elbow/silhouette heuristics."},
+
+{t:"Partitioning (k-Means)",q:"The 'elbow method' for choosing k looks for:",
+o:["The k with maximum SSE","A prominent bend where SSE stops dropping sharply as k increases","The k where silhouette = −1","The largest k available"],
+a:1,e:"Plot best SSE vs k; the 'elbow' (point of diminishing returns where the curve flattens) suggests a good k."},
+
+{t:"Partitioning (k-Means)",q:"The silhouette of observation i is s(i) = (b(i) − a(i)) / max{a(i), b(i)}. What are a and b?",
+o:["a = distance to global mean; b = distance to k","a = avg distance to OWN cluster; b = avg distance to NEAREST other cluster","a = SSE; b = between-cluster variance","a = number of clusters; b = number of points"],
+a:1,e:"a(i)=avg distance from i to others in its cluster; b(i)=avg distance to the nearest neighbouring cluster. s∈[−1,+1]; near +1 is well-clustered, near −1 likely misassigned."},
+
+{t:"Partitioning (k-Means)",q:"The Silhouette Width Criterion (SWC) ranges over:",
+o:["[0, ∞)","[−1, +1]","[0, 1]","(−∞, +∞)"],
+a:1,e:"SWC is the average of individual silhouettes, each in [−1,+1], so SWC∈[−1,+1]. Higher is better; it is used for model selection (choosing k)."},
+
+/* ===================== HIERARCHICAL ===================== */
+{t:"Hierarchical",q:"A complete agglomerative hierarchy produces:",
+o:["A single partition with fixed k","A sequence of nested partitions from N singletons up to one all-inclusive cluster","Only overlapping clusters","A probabilistic model"],
+a:1,e:"Agglomerative (bottom-up) hierarchical clustering yields a sequence of nested partitions, visualised as a dendrogram; you need not fix k in advance."},
+
+{t:"Hierarchical",q:"In the classic AHC algorithm, the difference between single/complete/average linkage is:",
+o:["Whether they are agglomerative or divisive","How the distance between two CLUSTERS is computed","Whether they use Euclidean or Manhattan distance","The number of clusters they output"],
+a:1,e:"All follow the same merge loop; they differ only in the inter-cluster distance: MIN (single), MAX (complete), average (UPGMA), or variance increase (Ward's)."},
+
+{t:"Hierarchical",q:"Single-linkage defines cluster distance as the ___ and is known for ___.",
+o:["maximum pairwise distance; robustness to noise","minimum pairwise distance; detecting arbitrary shapes but sensitivity to noise (chaining)","average distance; producing globular clusters","centroid distance; needing real-valued data only"],
+a:1,e:"Single-linkage = smallest distance between any two points across clusters. It can capture elongated/arbitrary shapes but is sensitive to noise (the 'chaining' effect)."},
+
+{t:"Hierarchical",q:"Which linkage tends to be a good compromise — fairly robust to noise/outliers but biased toward globular clusters?",
+o:["Single-linkage","Average linkage (UPGMA)","Random linkage","Nearest-neighbour linkage"],
+a:1,e:"Average linkage (UPGMA) is less sensitive to noise than single/complete and is often a good practical compromise, though like complete/Ward it favours globular clusters."},
+
+{t:"Hierarchical",q:"Ward's method merges the two clusters that:",
+o:["Are farthest apart","Minimise the increase in within-cluster SSE (variance) at each level","Have the most points","Have the smallest centroids"],
+a:1,e:"Ward's minimises the increase in total within-cluster SSE at each merge — it is the 'hierarchical counterpart' of k-means and can initialise it."},
+
+{t:"Hierarchical",q:"A dendrogram is:",
+o:["A scatter plot of two variables","A visual tree of the clustering hierarchy with a scale of merge distances","A confusion matrix","A density contour map"],
+a:1,e:"A dendrogram shows the nested merges; the vertical scale is the distance at which clusters merge. Horizontal cuts yield partitions (#clusters = #lines crossed)."},
+
+{t:"Hierarchical",q:"Typical time and space complexity of agglomerative hierarchical clustering:",
+o:["O(N) time, O(1) space","O(N log N) time always, O(N) space","O(N³) time in many cases, O(N²) space (proximity matrix)","O(2^N) time"],
+a:2,e:"It stores the proximity matrix → O(N²) memory, and naive implementations run in O(N³) (N merges, each updating/searching the matrix). Some linkages can be sped up."},
+
+{t:"Hierarchical",q:"A key drawback of agglomerative hierarchical clustering is that it is:",
+o:["Unable to produce a dendrogram","Greedy — an early wrong merge can never be undone, so no optimality guarantee","Only applicable to categorical data","Always requiring k in advance"],
+a:1,e:"Merges are greedy and irreversible; an early bad merge cannot be fixed, so the result is not guaranteed optimal (e.g. in Ward's sense)."},
+
+{t:"Hierarchical",q:"Hierarchical clustering is called a 'relational' approach because it:",
+o:["Requires a relational SQL database","Can operate using only a (dis)similarity matrix, not the original data matrix","Only works on graphs","Needs class labels"],
+a:1,e:"AHC needs only pairwise (dis)similarities between objects, so the original feature matrix is not required — it is a relational algorithm."},
+
+/* ===================== FREQUENT ITEMSETS ===================== */
+{t:"Frequent Itemsets",q:"The SUPPORT of an itemset X is:",
+o:["The fraction of items it contains","The number of transactions that contain X (size of its cover)","Its confidence times its lift","The number of items in X"],
+a:1,e:"support s(X) = |cover(X)| = number of transactions containing X. Frequency f(X)=s(X)/|D|. X is frequent if s(X) ≥ σ."},
+
+{t:"Frequent Itemsets",q:"The CONFIDENCE of the rule X ⇒ Y is:",
+o:["s(X ∪ Y)","s(X ∪ Y) / s(X)","s(X) / s(Y)","s(X ∪ Y) / |D|"],
+a:1,e:"conf(X⇒Y) = s(X∪Y)/s(X): among transactions containing X, the fraction that also contain Y. Support of the rule is s(X∪Y)."},
+
+{t:"Frequent Itemsets",q:"The anti-monotonicity (downward-closure) property of support states that:",
+o:["Every superset of a frequent itemset is frequent","Every subset of a frequent itemset is also frequent (and any superset of an infrequent set is infrequent)","Support increases with itemset size","Confidence is monotone in itemset size"],
+a:1,e:"If X is frequent, all its subsets are frequent; equivalently, if a set is infrequent, all its supersets are infrequent. Apriori uses this to prune candidates."},
+
+{t:"Frequent Itemsets",q:"Apriori generates candidate (k)-itemsets by:",
+o:["Listing all possible itemsets of size k","Joining frequent (k−1)-itemsets that share k−2 items, then PRUNING those with an infrequent (k−1)-subset","Randomly sampling itemsets","Only using 1-itemsets"],
+a:1,e:"Apriori joins two frequent (k−1)-itemsets differing in one item, then prunes any candidate having an infrequent (k−1)-subset (anti-monotonicity), before counting support in a DB scan."},
+
+{t:"Frequent Itemsets",q:"In an association rule X ⇒ Y, X and Y are called and must satisfy:",
+o:["antecedent and consequent; X ∩ Y = ∅","head and tail; X = Y","cover and support; X ⊆ Y","prior and posterior; independent"],
+a:0,e:"X = antecedent (left-hand side), Y = consequent (right-hand side), with X ∩ Y = ∅ (disjoint itemsets). The rule expresses co-occurrence, not causality."},
+
+{t:"Frequent Itemsets",q:"Lift(A ⇒ B) is defined as:",
+o:["s(A∪B)","conf(A⇒B) / f(B)","conf(A⇒B) × s(A)","1 − conf(A⇒B)"],
+a:1,e:"Lift = conf(A⇒B)/f(B). Lift>1 means A and B co-occur more than expected under independence; lift=1 means independence; lift<1 negative association."},
+
+{t:"Frequent Itemsets",q:"If conf(q⇒r)=1 and support(r)=5 out of N=30 transactions, the lift of q⇒r is:",
+o:["1.0","1.2","6.0","0.17"],
+a:2,e:"Lift = conf / (sup(r)/N) = 1 / (5/30) = 6. A high lift signals a strong (non-coincidental) association."},
+
+{t:"Frequent Itemsets",q:"An association rule expresses:",
+o:["A proven causal relationship","A co-occurrence/implication observed in the data, not necessarily causal","A distance between items","A clustering of transactions"],
+a:1,e:"Rules describe co-occurrence (implication), explicitly NOT causality. Strength is summarised by support, confidence, lift, etc."},
+
+{t:"Frequent Itemsets",q:"Given items I with |I|=n, the number of possible itemsets (the candidate search space) grows as:",
+o:["n","n²","2^n (exponential)","n!"],
+a:2,e:"There are 2^n possible itemsets (each item in or out), which is why exhaustive search is infeasible and Apriori-style pruning is essential."},
+
+/* ===================== DENSITY-BASED ===================== */
+{t:"Density-Based",q:"In DBSCAN, a CORE point is one that:",
+o:["Has fewer than MinPts neighbours within ε","Has at least MinPts points within radius ε (including itself)","Lies on the convex hull","Is the cluster centroid"],
+a:1,e:"A core point has ≥ MinPts points within its ε-neighbourhood (counting itself) — it sits in the interior of a dense region."},
+
+{t:"Density-Based",q:"A BORDER point in DBSCAN:",
+o:["Is a core point on the cluster edge","Has fewer than MinPts within ε but lies within ε of at least one core point","Is always labelled noise","Has more neighbours than a core point"],
+a:1,e:"Border points are not dense themselves (< MinPts within ε) but fall in the neighbourhood of a core point, so they get attached to that cluster."},
+
+{t:"Density-Based",q:"A NOISE point in DBSCAN is:",
+o:["A point with the highest density","Neither a core point nor a border point","Always a singleton cluster","The first seed of a cluster"],
+a:1,e:"Noise = neither core nor border. DBSCAN explicitly models noise, which is why it is resistant to noise."},
+
+{t:"Density-Based",q:"The two main parameters of DBSCAN are:",
+o:["k and the number of iterations","ε (radius) and MinPts","the centroid and the variance","support and confidence"],
+a:1,e:"DBSCAN is governed by ε (neighbourhood radius) and MinPts (density threshold). It implicitly uses a coarse density estimate = #points within ε."},
+
+{t:"Density-Based",q:"DBSCAN works well when it must:",
+o:["Find clusters of arbitrary shape and be resistant to noise","Find only spherical clusters","Handle very high-dimensional data","Cope with widely varying densities"],
+a:0,e:"DBSCAN handles arbitrary-shaped clusters and is robust to noise. It struggles with high-dimensional data and clusters of VARYING densities (a single global ε can't fit all)."},
+
+{t:"Density-Based",q:"Why do clusters of VARYING density challenge DBSCAN?",
+o:["Centroids cannot be computed","A single (ε, MinPts) cannot simultaneously fit dense and sparse clusters","It requires labelled data","The triangle inequality fails"],
+a:1,e:"A global ε/MinPts threshold tuned for dense clusters will merge or miss sparser ones (and vice-versa). HDBSCAN* addresses this with a density hierarchy."},
+
+{t:"Density-Based",q:"DBSCAN* (the simplified version used to define density-connected clusters) differs from DBSCAN by:",
+o:["Using medoids","Treating border points as noise — clusters are maximal sets of density-connected CORE points","Requiring k in advance","Producing overlapping clusters"],
+a:1,e:"DBSCAN* drops border objects (labels them noise); clusters are maximal subsets of density-connected core points. Borders can be re-attached as a post-processing step."},
+
+{t:"Density-Based",q:"Typical runtime of DBSCAN is:",
+o:["O(N) always","O(n²) in general, but O(n log n) achievable with spatial index structures (e.g. kd-trees) in low/moderate dimensions","O(2^n)","O(N³) like hierarchical"],
+a:1,e:"DBSCAN is O(n × ε-range-search). Without indexing that is O(n²); with kd-/R*-trees in low-dim it reaches O(n log n). Memory is O(n) if distances are computed on the fly."},
+
+{t:"Density-Based",q:"HDBSCAN* improves on DBSCAN mainly by:",
+o:["Requiring fewer transactions","Building a density-based hierarchy (over all density thresholds) and extracting clusters of varying density","Using squared Euclidean distance only","Being supervised"],
+a:1,e:"HDBSCAN* builds a hierarchy across all density levels (effectively all DBSCAN* solutions) and extracts a flat clustering via local cuts (FOSC), handling varying densities."},
+
+/* ===================== OUTLIER DETECTION ===================== */
+{t:"Outlier Detection",q:"Hawkins' classic definition says an outlier is an observation that:",
+o:["Has the largest value in the dataset","Deviates so much from other observations as to arouse suspicion it was generated by a DIFFERENT mechanism","Belongs to the majority class","Has zero variance"],
+a:1,e:"Hawkins (1980): an outlier 'deviates so much … as to arouse suspicions that it was generated by a different mechanism.' Normal points follow one generating process; outliers don't."},
+
+{t:"Outlier Detection",q:"Which is a main UNSUPERVISED outlier-detection approach covered?",
+o:["Decision trees","Statistical, clustering-based, and non-parametric density-based","Linear regression","One-hot encoding"],
+a:1,e:"The three unsupervised families: statistical (low probability under an estimated distribution), clustering-based (poor fit / tiny clusters), and non-parametric density-based (unusual absolute/relative density)."},
+
+{t:"Outlier Detection",q:"A key problem with the STATISTICAL (parametric) approach to outliers is:",
+o:["It needs no distribution at all","A specific distribution must be assumed, which may not hold, and parameter estimates can be sensitive to the very outliers being sought","It cannot produce scores","It only works on text"],
+a:1,e:"Parametric tests assume a known distribution (often unknown in practice) and estimates like mean/std can be masked/swamped by outliers; robust estimation is needed, and high-dim estimation is hard."},
+
+{t:"Outlier Detection",q:"In the DB(ε, π)-outlier model (Knorr & Ng), a point p is an outlier if:",
+o:["It is a cluster centroid","At most a fraction π of all other points lie within distance ε of p","More than π points lie within ε","It has the highest density"],
+a:1,e:"DB(ε,π): p is an outlier if at most π·100% of points fall within distance ε of p (i.e. few neighbours in its ε-range) — a distance-based notion of low density."},
+
+{t:"Outlier Detection",q:"The simple kNN outlier score of a point is:",
+o:["Its cluster label","Its distance to the k-th nearest neighbour (larger ⇒ more outlying)","The number of clusters","Its Pearson correlation"],
+a:1,e:"kNN method: outlier score = distance to the k-th NN. Weighted-kNN averages distances to all 1..k NNs. Larger distances ⇒ lower local density ⇒ more outlying."},
+
+{t:"Outlier Detection",q:"The Local Outlier Factor (LOF) is fundamentally a:",
+o:["Global density score","RELATIVE density score — comparing a point's density to that of its neighbours","Supervised classifier","Distance to the global mean"],
+a:1,e:"LOF contrasts a point's local reachability density with those of its kNN. This local/relative view detects outliers even when clusters have different densities, which global kNN can miss."},
+
+{t:"Outlier Detection",q:"For LOF, which interpretation is correct?",
+o:["LOF ≈ 1 ⇒ strong outlier","LOF ≈ 1 ⇒ point lies in a region of homogeneous density (inlier); LOF ≫ 1 ⇒ outlier","LOF < 0 ⇒ inlier","LOF is always between 0 and 1"],
+a:1,e:"LOF ≈ 1 means the point's density matches its neighbours' (inlier). LOF ≫ 1 means much lower density than neighbours ⇒ outlier."},
+
+{t:"Outlier Detection",q:"LOF uses the reachability distance reach_dist_k(p,o) = max{k_distance(o), dist(p,o)} in order to:",
+o:["Make the score supervised","Reduce statistical fluctuations of the density estimate within clusters","Guarantee a metric","Remove the need for k"],
+a:1,e:"Smoothing distances by k_distance(o) reduces noisy fluctuations of the local density estimates for points close together inside a cluster."},
+
+/* ===================== EM / GMM ===================== */
+{t:"EM / GMM",q:"In a PROBABILISTIC partition matrix, the membership β_ij is interpreted as:",
+o:["A binary 0/1 assignment","A probability/likelihood, with Σ_i β_ij = 1 over clusters for each object","A distance","The cluster radius"],
+a:1,e:"Probabilistic (soft) partitions have β_ij∈[0,1] interpreted as probabilities, summing to 1 across clusters per object. Hard partitions force β_ij∈{0,1}."},
+
+{t:"EM / GMM",q:"A Gaussian Mixture Model represents the data density as:",
+o:["A single Gaussian","A weighted sum Σ_i π_i N(x | v_i, Σ_i) of k Gaussians","A uniform distribution","A histogram"],
+a:1,e:"GMM: p(x)=Σ_i π_i N(x|v_i,Σ_i), where π_i are mixing weights (priors), v_i means, Σ_i covariances. It is a model for overlapping/probabilistic clustering."},
+
+{t:"EM / GMM",q:"The EM algorithm fits a GMM by maximising the:",
+o:["Sum of squared errors","(log-)likelihood of the data under the mixture model","Silhouette width","Support of itemsets"],
+a:1,e:"EM is based on Maximum Likelihood Estimation: it iteratively maximises the (log-)likelihood. The log transform converts the product over points into a sum for convenience."},
+
+{t:"EM / GMM",q:"In EM for GMMs, the E-step computes γ_ij, which is:",
+o:["The new cluster mean","The posterior probability that observation x_j was generated by component i (via Bayes)","The covariance matrix","The mixing weight π_i"],
+a:1,e:"E-step: γ_ij = π_i N(x_j|v_i,Σ_i) / Σ_l π_l N(x_j|v_l,Σ_l) — the responsibility / posterior probability of component i for point j (Bayes' rule)."},
+
+{t:"EM / GMM",q:"In the M-step of EM-GMM, the updated cluster mean v_i is:",
+o:["The medoid of the cluster","A γ-weighted average of all points: (1/N_i) Σ_j γ_ij x_j","The point of maximum density","Always the previous mean"],
+a:1,e:"M-step updates use responsibilities as weights: v_i = (Σ_j γ_ij x_j)/N_i, Σ_i = γ-weighted covariance, π_i = N_i/N where N_i = Σ_j γ_ij."},
+
+{t:"EM / GMM",q:"Compared with k-means, EM-GMM:",
+o:["Provides less information","Can model elongated/ellipsoidal clusters with arbitrary covariance and gives posterior probabilities, but needs more data/parameters","Is always faster","Requires no number of clusters"],
+a:1,e:"EM-GMM yields a full probabilistic model (covariances, posteriors) and handles ellipsoidal clusters, but has many more parameters (more data needed) and Σ⁻¹ costs O(n³). k-means is a limiting case of EM-GMM."},
+
+{t:"EM / GMM",q:"Which statement about EM-GMM is TRUE?",
+o:["It is hierarchical and finds k automatically","It is non-parametric","It is subject to local optima and requires the number of clusters k as input","It works directly on nominal data"],
+a:2,e:"EM-GMM is parametric, non-hierarchical (k must be given), real-valued only, and converges to local optima (like k-means). Initialisation is often via k-means."},
+
+{t:"EM / GMM",q:"In the Gaussian density, the term (x−v)ᵀ Σ⁻¹ (x−v) inside the exponent is the:",
+o:["Euclidean distance","Squared Mahalanobis distance from the point to the component centre","Manhattan distance","Cosine similarity"],
+a:1,e:"That quadratic form is the squared Mahalanobis distance from x to the component mean v, scaled by the component's covariance."},
+
+/* ===================== PROBABILITY / DENSITY EST ===================== */
+{t:"Probability & Density",q:"The sum (marginalisation) rule states p(X) = ",
+o:["Σ_Y p(X,Y)","p(X)·p(Y)","p(Y|X)p(X)","p(X|Y)/p(Y)"],
+a:0,e:"Sum rule: p(X) = Σ_Y p(X,Y) — the marginal of X is obtained by summing the joint over the other variable Y."},
+
+{t:"Probability & Density",q:"The product rule states p(X,Y) = ",
+o:["p(X)+p(Y)","p(Y|X) p(X)","p(X)−p(Y)","p(X|Y)+p(Y|X)"],
+a:1,e:"Product rule: p(X,Y) = p(Y|X) p(X) = p(X|Y) p(Y). Bayes' theorem follows directly: p(Y|X)=p(X|Y)p(Y)/p(X)."},
+
+{t:"Probability & Density",q:"In Bayes' theorem p(Y|X) = p(X|Y)p(Y)/p(X), the term p(Y) is the:",
+o:["Likelihood","Evidence","Prior","Posterior"],
+a:2,e:"p(Y) = prior (belief about Y before seeing X); p(X|Y) = likelihood; p(X) = evidence; p(Y|X) = posterior (belief after observing X)."},
+
+{t:"Probability & Density",q:"Which is a valid property of a probability DENSITY function p(x) (continuous), that is NOT required of a PMF?",
+o:["p(x) ≥ 0","∫ p(x) dx = 1","p(x) may exceed 1 (it is a density/likelihood, not a probability)","It must sum to 1"],
+a:2,e:"For a pdf, p(x) ≥ 0 and ∫p dx = 1, but p(x) is NOT bounded by 1 — it is a density, not a probability. The probability comes from the area under the curve over an interval."},
+
+{t:"Probability & Density",q:"Two random variables X and Y are independent iff:",
+o:["Cov(X,Y) > 0","p(X,Y) = p(X)·p(Y) for all values","E[X] = E[Y]","p(X|Y) = p(Y|X)"],
+a:1,e:"Independence: the joint factorises as the product of marginals, p(X=x,Y=y)=p(X=x)p(Y=y). Then p(Y|X)=p(Y). Zero covariance is necessary but NOT sufficient for independence."},
+
+{t:"Probability & Density",q:"Zero covariance between X and Y means they are:",
+o:["Always independent","Necessarily independent only if Gaussian-unrelated","Uncorrelated (linearly), but not necessarily independent","Identical"],
+a:2,e:"Cov=0 means no LINEAR relationship; variables can still be dependent through a nonlinear relationship. Zero covariance is necessary but not sufficient for independence."},
+
+{t:"Probability & Density",q:"The expectation E[X] of a continuous random variable is:",
+o:["Σ_x x P(x)","∫ x p(x) dx","the mode of p(x)","Var(X)²"],
+a:1,e:"For continuous X, E[X]=∫ x p(x) dx (the discrete analogue is Σ_x x P(x)). It is the long-run average value of X."},
+
+{t:"Probability & Density",q:"Parametric vs non-parametric density estimation: which pairing is correct?",
+o:["Parametric → Kernel Density Estimation; Non-parametric → MLE","Parametric → MLE / Method of Moments; Non-parametric → KDE and kNN density estimation","Both use only histograms","Non-parametric assumes a Gaussian"],
+a:1,e:"Parametric assumes a known functional form and estimates its parameters (e.g. via MLE or method of moments). Non-parametric makes no shape assumption: e.g. Kernel Density Estimation and kNN density estimation."},
+
+{t:"Probability & Density",q:"The Maximum Likelihood Estimation (MLE) principle chooses parameters θ that:",
+o:["Minimise the data variance","Maximise the likelihood L(X,θ)=Π_i f(x_i|θ) of the observed i.i.d. sample","Set all parameters to zero","Maximise the number of clusters"],
+a:1,e:"MLE picks θ̂ = argmax L(X,θ) = argmax Π_i f(x_i|θ). In practice one maximises the log-likelihood Σ_i ln f(x_i|θ) (monotonic transform, turns products into sums)."},
+
+{t:"Probability & Density",q:"For a Normal distribution, the MLE of the mean and variance are:",
+o:["The median and the range","The sample mean and the sample (co)variance","Always 0 and 1","The mode and the IQR"],
+a:1,e:"The MLE solution for a Gaussian is intuitive: μ̂ = sample mean, σ̂² = sample variance (and the sample covariance in the multivariate case)."},
+
+{t:"Probability & Density",q:"Why is the LOG-likelihood maximised instead of the likelihood itself?",
+o:["It changes the optimal θ","Logarithm is monotonic, so the optimum is unchanged, and it turns the product over points into a numerically easier sum","It removes the need for data","It makes the function non-differentiable"],
+a:1,e:"Because ln is monotonically increasing, argmax of L and of ln L coincide; the log converts Π into Σ, which is easier and more numerically stable to optimise."}
+];
+
+</script>
+<script>
+const SHEET = `
+<div class="note">Quick-reference for DM583. Distances are dissimilarities; similarities (cosine, Pearson) grow with closeness. Convert in [0,1] with <span class="f">d = 1 − s</span>.</div>
+
+<h2>Variable types &amp; proximity choice</h2>
+<table>
+<tr><td>Nominal</td><td>= , ≠ only · use SMC / Jaccard / one-hot</td></tr>
+<tr><td>Ordinal</td><td>adds &lt; &gt; ≤ ≥ · convert <span class="f">(rank−1)/(#vals−1)</span></td></tr>
+<tr><td>Numeric</td><td>adds + − × ÷ · use distances / correlation / cosine</td></tr>
+<tr><td>Asymmetric</td><td>only non-zero values informative (sparse) → Jaccard, cosine</td></tr>
+</table>
+
+<h2>Distances (numeric)</h2>
+<table>
+<tr><td>Euclidean</td><td class="f">√ Σ_k (x_ik − x_jk)²   (norm-2, p=2)</td></tr>
+<tr><td>Manhattan</td><td class="f">Σ_k |x_ik − x_jk|   (norm-1, p=1)</td></tr>
+<tr><td>Minkowski</td><td class="f">(Σ_k |x_ik − x_jk|^p)^(1/p)</td></tr>
+<tr><td>Suprema</td><td class="f">max_k |x_ik − x_jk|   (p→∞, Chebyshev)</td></tr>
+<tr><td>Mahalanobis</td><td class="f">√ (x−v)ᵀ Cov⁻¹ (x−v)   (covariance-aware, ellipsoidal)</td></tr>
+<tr><td>Metric</td><td>non-neg + identity + symmetry + <b>triangle inequality</b></td></tr>
+</table>
+
+<h2>Similarity (numeric)</h2>
+<table>
+<tr><td>Cosine</td><td class="f">⟨x_i,x_j⟩ / (‖x_i‖₂ ‖x_j‖₂)</td></tr>
+<tr><td>Pearson</td><td class="f">cov(p,q)/(σ_p σ_q) ∈ [−1,1]</td></tr>
+<tr><td>Spearman</td><td>Pearson on ranks → robust to outliers</td></tr>
+</table>
+
+<h2>Binary / categorical proximity</h2>
+<table>
+<tr><td>SMC</td><td class="f">(n11+n00)/n</td></tr>
+<tr><td>Jaccard</td><td class="f">n11/(n11+n10+n01)  (drops 0-0; asymmetric)</td></tr>
+</table>
+
+<h2>Rescaling</h2>
+<table>
+<tr><td>Linear [0,1]</td><td class="f">(x − min)/(max − min)</td></tr>
+<tr><td>z-score</td><td class="f">(x − mean)/std</td></tr>
+</table>
+
+<h2>k-Means (partitioning, hard)</h2>
+<table>
+<tr><td>Prototype</td><td>centroid (mean) · squared Euclidean</td></tr>
+<tr><td>Objective</td><td class="f">SSE = Σ_c Σ_{x∈Cc} ‖x − x̄c‖²</td></tr>
+<tr><td>E / M</td><td>assign to nearest centroid / recompute centroid as mean</td></tr>
+<tr><td>Complexity</td><td class="f">O(N·n·k) per iteration</td></tr>
+<tr><td>Cons</td><td>local optima · globular only · real-valued · outlier-sensitive · need k</td></tr>
+<tr><td>Choose k</td><td>elbow on SSE · Silhouette (max SWC)</td></tr>
+<tr><td>Silhouette</td><td class="f">s(i)=(b−a)/max(a,b) ∈ [−1,1]; a=own cluster, b=nearest cluster</td></tr>
+</table>
+
+<h2>Hierarchical (agglomerative)</h2>
+<table>
+<tr><td>Single (MIN)</td><td>arbitrary shapes · chaining · noise-sensitive</td></tr>
+<tr><td>Complete (MAX)</td><td>less noise-sensitive · splits big clusters · globular</td></tr>
+<tr><td>Average</td><td>UPGMA · good compromise · globular</td></tr>
+<tr><td>Ward</td><td>min SSE increase · hierarchical k-means · globular</td></tr>
+<tr><td>Output</td><td>dendrogram; cut → partition (#clusters = #crossings)</td></tr>
+<tr><td>Complexity</td><td class="f">O(N²) space, ~O(N³) time</td></tr>
+<tr><td>Traits</td><td>greedy (no undo) · relational (needs only D) · no k upfront</td></tr>
+</table>
+
+<h2>Frequent itemsets &amp; rules</h2>
+<table>
+<tr><td>Support</td><td class="f">s(X)=|cover(X)|; frequent if s(X)≥σ</td></tr>
+<tr><td>Confidence</td><td class="f">conf(X⇒Y)=s(X∪Y)/s(X)</td></tr>
+<tr><td>Lift</td><td class="f">conf(X⇒Y)/f(Y); &gt;1 positive, =1 independent</td></tr>
+<tr><td>Anti-monotone</td><td>subsets of frequent sets are frequent (downward closure)</td></tr>
+<tr><td>Apriori</td><td>join freq (k−1)-sets → prune sets w/ infrequent subset → count</td></tr>
+<tr><td>Search space</td><td class="f">2ⁿ itemsets</td></tr>
+</table>
+
+<h2>Density-based</h2>
+<table>
+<tr><td>Core</td><td>≥ MinPts within ε (incl. self)</td></tr>
+<tr><td>Border</td><td>&lt; MinPts but within ε of a core point</td></tr>
+<tr><td>Noise</td><td>neither core nor border</td></tr>
+<tr><td>Params</td><td>ε (radius), MinPts</td></tr>
+<tr><td>Good at</td><td>arbitrary shapes · noise-resistant</td></tr>
+<tr><td>Bad at</td><td>varying densities · high-dim</td></tr>
+<tr><td>Complexity</td><td class="f">O(n²); O(n log n) with index; O(n) memory</td></tr>
+<tr><td>HDBSCAN*</td><td>density hierarchy over all ε · handles varying density</td></tr>
+</table>
+
+<h2>Outlier detection (unsupervised)</h2>
+<table>
+<tr><td>Hawkins</td><td>"generated by a different mechanism"</td></tr>
+<tr><td>Approaches</td><td>statistical · clustering-based · density-based</td></tr>
+<tr><td>DB(ε,π)</td><td>outlier if ≤ π fraction of points within ε</td></tr>
+<tr><td>kNN score</td><td>distance to k-th NN (weighted = avg of 1..k NN)</td></tr>
+<tr><td>LOF</td><td>relative density vs neighbours; ≈1 inlier, ≫1 outlier</td></tr>
+<tr><td>reach_dist</td><td class="f">max{k_distance(o), dist(p,o)}  (smoothing)</td></tr>
+</table>
+
+<h2>EM-GMM (overlapping / probabilistic)</h2>
+<table>
+<tr><td>Model</td><td class="f">p(x)=Σ_i π_i N(x|v_i,Σ_i)</td></tr>
+<tr><td>E-step</td><td class="f">γ_ij = π_i N(x_j|v_i,Σ_i) / Σ_l π_l N(...)</td></tr>
+<tr><td>M-step</td><td class="f">v_i=Σγ_ij x_j/N_i · Σ_i=γ-wtd cov · π_i=N_i/N</td></tr>
+<tr><td>Objective</td><td>maximise log-likelihood (MLE)</td></tr>
+<tr><td>Traits</td><td>parametric · real-valued · need k · local optima · Σ⁻¹ O(n³); k-means is a limit</td></tr>
+</table>
+
+<h2>Probability &amp; density estimation</h2>
+<table>
+<tr><td>Sum rule</td><td class="f">p(X)=Σ_Y p(X,Y)</td></tr>
+<tr><td>Product rule</td><td class="f">p(X,Y)=p(Y|X)p(X)</td></tr>
+<tr><td>Bayes</td><td class="f">p(Y|X)=p(X|Y)p(Y)/p(X)  (post=lik·prior/evid)</td></tr>
+<tr><td>PMF vs PDF</td><td>PDF can be &gt;1; prob = area under curve; ∫p=1</td></tr>
+<tr><td>Independence</td><td class="f">p(X,Y)=p(X)p(Y)  (Cov=0 necessary, not sufficient)</td></tr>
+<tr><td>Parametric</td><td>MLE / method of moments (assume form)</td></tr>
+<tr><td>Non-param</td><td>Kernel Density Estimation, kNN density</td></tr>
+<tr><td>MLE</td><td class="f">θ̂=argmax Σ_i ln f(x_i|θ); Normal → sample mean &amp; var</td></tr>
+</table>
+`;
+
+</script>
+<script>
+/* ---------- state ---------- */
+const LS_KEY = "dm583_progress_v1";
+let answers = {};      // id -> chosen index
+let order = [];        // displayed question indices
+let mode = "all";      // "all" | "one"
+let cur = 0;           // pointer for one-by-one
+let topicFilter = "all";
+let wrongOnly = false;
+
+function load(){ try{ answers = JSON.parse(localStorage.getItem(LS_KEY))||{}; }catch(e){ answers={}; } }
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(answers)); }catch(e){} }
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const letters = ["A","B","C","D","E"];
+
+function topics(){
+  const s = new Set(QUESTIONS.map(q=>q.t));
+  return [...s];
+}
+function buildTopicSelect(){
+  const sel = $("#topic");
+  topics().forEach(t=>{
+    const o=document.createElement("option"); o.value=t; o.textContent=t;
+    sel.appendChild(o);
+  });
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+function activeIndices(){
+  let idx = QUESTIONS.map((q,i)=>i)
+    .filter(i => topicFilter==="all" || QUESTIONS[i].t===topicFilter);
+  if(wrongOnly){
+    idx = idx.filter(i => answers[i]!==undefined && answers[i]!==QUESTIONS[i].a);
+  }
+  return idx;
+}
+function rebuildOrder(keepShuffleChoice){
+  order = activeIndices();
+  if(keepShuffleChoice && window._shuffled) shuffle(order);
+  cur = 0;
+}
+
+/* ---------- rendering ---------- */
+function qCard(i, displayNum, total){
+  const q = QUESTIONS[i];
+  const chosen = answers[i];
+  const answered = chosen!==undefined;
+  const card = document.createElement("div");
+  card.className = "q";
+  card.dataset.i = i;
+
+  const top = document.createElement("div");
+  top.className = "qtop";
+  top.innerHTML = `<span class="chip">${q.t}</span><span class="qnum">Q${displayNum} / ${total}</span>`;
+  card.appendChild(top);
+
+  const txt = document.createElement("div");
+  txt.className="qtext"; txt.innerHTML = q.q;
+  card.appendChild(txt);
+
+  q.o.forEach((opt,oi)=>{
+    const d = document.createElement("div");
+    d.className = "opt";
+    d.innerHTML = `<span class="key">${letters[oi]}</span><span>${opt}</span>`;
+    if(answered){
+      d.classList.add("lock");
+      if(oi===q.a) d.classList.add("correct");
+      if(oi===chosen && chosen!==q.a) d.classList.add("wrong");
+    } else {
+      d.onclick = ()=>{ answers[i]=oi; save(); render(); updateStats(); };
+    }
+    card.appendChild(d);
+  });
+
+  const exp = document.createElement("div");
+  exp.className = "exp" + (answered ? " show":"");
+  if(answered){
+    const ok = chosen===q.a;
+    exp.innerHTML =
+      `<div class="verdict ${ok?'ok':'no'}">${ok?'✓ Correct':'✗ Not quite — answer is '+letters[q.a]}</div>`+
+      `<div><b>Why:</b> ${q.e}</div>`;
+  }
+  card.appendChild(exp);
+  return card;
+}
+
+function render(){
+  const list = $("#list");
+  list.innerHTML = "";
+  const total = order.length;
+  if(total===0){
+    list.innerHTML = `<div class="empty">No questions match this filter.<br>Try 'All topics' or turn off 'Review wrong'.</div>`;
+    $("#count").textContent = "0 questions";
+    toggleFooterNav();
+    return;
+  }
+  if(mode==="all"){
+    order.forEach((i,n)=> list.appendChild(qCard(i, n+1, total)));
+  } else {
+    if(cur>=total) cur=total-1;
+    list.appendChild(qCard(order[cur], cur+1, total));
+  }
+  $("#count").textContent = `${total} question${total>1?'s':''}` + (mode==="one"?` · viewing ${cur+1}`:"");
+  toggleFooterNav();
+}
+
+/* ---------- stats ---------- */
+function updateStats(){
+  const idx = activeIndices();
+  const tot = idx.length;
+  let ans=0, cor=0;
+  idx.forEach(i=>{ if(answers[i]!==undefined){ans++; if(answers[i]===QUESTIONS[i].a) cor++;} });
+  $("#sTot").textContent=tot; $("#sAns").textContent=ans; $("#sCor").textContent=cor;
+  $("#sBar").style.width = tot? (100*ans/tot)+"%" : "0%";
+}
+
+/* ---------- footer nav (one-by-one) ---------- */
+function toggleFooterNav(){
+  const one = mode==="one" && order.length>0;
+  $("#prevBtn").classList.toggle("hidden", !one);
+  $("#nextBtn").classList.toggle("hidden", !one || cur>=order.length-1);
+  $("#gradeBtn").classList.toggle("hidden", !(one && cur>=order.length-1));
+}
+
+/* ---------- score modal-ish ---------- */
+function showScore(){
+  const idx = activeIndices();
+  let ans=0,cor=0;
+  idx.forEach(i=>{ if(answers[i]!==undefined){ans++; if(answers[i]===QUESTIONS[i].a) cor++;} });
+  const list=$("#list");
+  const pct = ans? Math.round(100*cor/ans):0;
+  const div=document.createElement("div");
+  div.className="result";
+  div.innerHTML = `<div class="big">${cor}/${ans||0}</div>
+    <div class="pct">${pct}% correct on answered questions (${idx.length} in this set)</div>
+    <div style="margin-top:14px"><button class="primary" id="againBtn">Review wrong ones</button></div>`;
+  list.prepend(div);
+  $("#againBtn").onclick=()=>{ wrongOnly=true; $("#onlyWrong").classList.add("on"); mode="all"; setSeg(); rebuildOrder(true); render(); updateStats(); window.scrollTo(0,0); };
+  window.scrollTo(0,0);
+}
+
+/* ---------- tabs ---------- */
+function setSeg(){
+  $("#modeAll").classList.toggle("on", mode==="all");
+  $("#modeOne").classList.toggle("on", mode==="one");
+}
+
+/* ---------- wire up ---------- */
+function init(){
+  load();
+  buildTopicSelect();
+  $("#tab-sheet").innerHTML = SHEET;
+
+  $("#topic").onchange = e=>{ topicFilter=e.target.value; rebuildOrder(true); render(); updateStats(); };
+  $("#modeAll").onclick = ()=>{ mode="all"; setSeg(); render(); };
+  $("#modeOne").onclick = ()=>{ mode="one"; cur=0; setSeg(); render(); };
+  $("#shuffle").onclick = ()=>{ window._shuffled=true; shuffle(order); cur=0; render(); };
+  $("#reset").onclick = ()=>{ if(confirm("Clear all your answers?")){ answers={}; save(); rebuildOrder(true); render(); updateStats(); } };
+  $("#onlyWrong").onclick = ()=>{ wrongOnly=!wrongOnly; $("#onlyWrong").classList.toggle("on",wrongOnly); rebuildOrder(true); render(); updateStats(); };
+
+  $("#prevBtn").onclick=()=>{ if(cur>0){cur--; render(); window.scrollTo(0,0);} };
+  $("#nextBtn").onclick=()=>{ if(cur<order.length-1){cur++; render(); window.scrollTo(0,0);} };
+  $("#gradeBtn").onclick=showScore;
+
+  document.querySelectorAll(".tabbtn").forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      const t=b.dataset.tab;
+      $("#tab-quiz").classList.toggle("hidden", t!=="quiz");
+      $("#tab-sheet").classList.toggle("hidden", t!=="sheet");
+      $("#prevBtn").classList.add("hidden");$("#nextBtn").classList.add("hidden");$("#gradeBtn").classList.add("hidden");
+      if(t==="quiz") toggleFooterNav();
+      window.scrollTo(0,0);
+    };
+  });
+
+  rebuildOrder(false);
+  render();
+  updateStats();
+}
+init();
+
+</script>
+</body>
+</html>

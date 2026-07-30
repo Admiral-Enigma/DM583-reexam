@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DM583 — Sample MCQ Exam (True/False)</title>
+<style>
+  :root{
+    --bg:#0f1419;--panel:#171f29;--panel2:#1e2935;--ink:#e8eef4;--muted:#93a4b5;
+    --line:#2a3744;--accent:#4ea1ff;--accent2:#7c5cff;--good:#3ecf8e;--bad:#ff6b6b;--warn:#ffb454;--chip:#22303d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0d1217,#0f1419 30%);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 0 110px}
+  header{position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);background:rgba(15,20,25,.86);
+    border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;letter-spacing:.3px} header h1 span{color:var(--accent)}
+  .sub{color:var(--muted);font-size:12.5px}
+  .stats{margin-left:auto;display:flex;gap:14px;align-items:center;font-size:13px}
+  .stat b{color:var(--ink)} .stat{color:var(--muted)}
+  .bar{height:6px;background:var(--panel2);border-radius:5px;overflow:hidden;width:150px}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:.3s}
+  .wrap{max-width:880px;margin:0 auto;padding:0 18px}
+  .intro{color:var(--muted);font-size:13.5px;background:var(--panel2);border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:8px;padding:12px 14px;margin:18px 0}
+
+  .q{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:18px 0}
+  .qhead{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .qhead h2{font-size:16px;margin:0} .qhead .pts{font-size:12px;color:var(--muted)}
+  .chip{font-size:11px;background:var(--chip);color:var(--muted);border:1px solid var(--line);padding:3px 9px;border-radius:20px}
+  .stem{font-size:15px;margin:6px 0 14px}
+  .stem code{background:#0c1117;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px;color:#cfe3ff}
+  table.data{border-collapse:collapse;margin:10px 0;font-size:13px;width:100%}
+  table.data th,table.data td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+  table.data th{background:var(--panel2);color:var(--muted);font-weight:600}
+  .ds{font-family:ui-monospace,Menlo,Consolas,monospace;background:#0c1117;border:1px solid var(--line);
+    border-radius:7px;padding:8px 11px;color:#cfe3ff;display:inline-block;margin:4px 0}
+
+  .stmt{border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:13px 15px;margin:11px 0}
+  .stmt .txt{display:flex;gap:10px;margin-bottom:10px}
+  .stmt .n{flex:0 0 22px;height:22px;border-radius:6px;background:var(--chip);display:grid;place-items:center;
+    font-size:12px;font-weight:700;color:var(--muted);margin-top:1px}
+  .tf{display:flex;gap:8px;flex-wrap:wrap}
+  .tf button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);
+    border-radius:8px;padding:7px 16px;cursor:pointer;transition:.12s;min-width:120px}
+  .tf button:hover{border-color:var(--accent)}
+  .tf button.sel{border-color:var(--accent);background:rgba(78,161,255,.12)}
+  .tf button.right{border-color:var(--good);background:rgba(62,207,142,.14);color:#d6ffe9}
+  .tf button.wrong{border-color:var(--bad);background:rgba(255,107,107,.14);color:#ffe0e0}
+  .tf button.lock{cursor:default;opacity:.6} .tf button.lock.sel{opacity:1}
+  .exp{margin-top:11px;border-top:1px dashed var(--line);padding-top:10px;font-size:13.3px;color:#c7d6e3;display:none}
+  .exp.show{display:block}
+  .exp .verdict{font-weight:700;margin-bottom:3px} .v-ok{color:var(--good)} .v-no{color:var(--bad)}
+  .exp code{background:#0c1117;border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px;color:#cfe3ff}
+
+  .qfoot{display:flex;gap:10px;align-items:center;margin-top:14px}
+  button.act{font:inherit;color:#fff;background:linear-gradient(120deg,var(--accent),var(--accent2));
+    border:none;border-radius:9px;padding:9px 16px;cursor:pointer;font-weight:600}
+  button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .qscore{font-size:13px;color:var(--muted)} .qscore b{color:var(--ink)}
+
+  footer{position:fixed;bottom:0;left:0;right:0;background:rgba(15,20,25,.93);border-top:1px solid var(--line);
+    backdrop-filter:blur(8px);padding:12px 18px}
+  .fwrap{max-width:880px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .key{font-size:12.5px;color:var(--muted)}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>DM583</span> Sample MCQ Exam · True/False</h1>
+  <div class="stats">
+    <div class="stat">Score <b id="sCor">0</b>/<b id="sTot">15</b></div>
+    <div class="bar"><i id="sBar"></i></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    Exam format: each question presents several statements; for each, decide <b>True</b> or <b>False</b>.
+    Pick an answer for every statement, then press <b>Check this question</b> to reveal the worked solution.
+    Each correct statement is worth 1 point (15 total).
+  </div>
+  <div id="quiz"></div>
+</div>
+
+<footer>
+  <div class="fwrap">
+    <div class="key" id="ftLeft">Answer all statements, then check each question.</div>
+    <div style="display:flex;gap:10px">
+      <button class="ghost act" id="checkAll" style="background:none">Check all</button>
+      <button class="act" id="resetAll">Reset</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+const QUIZ = [
+{
+  id:1, points:"XXX", tag:"EM-GMM",
+  stem:`In the context of <b>EM-GMM clustering</b>, which of the following statements are correct?`,
+  statements:[
+    {text:`EM-GMM clustering makes use of Bayes' rule/theorem.`, ans:true,
+     exp:`The E-step computes each point's responsibility (posterior) <code>γ_ij = π_i·N(x_j|v_i,Σ_i) / Σ_l π_l·N(x_j|v_l,Σ_l)</code>. That is exactly Bayes' theorem (posterior ∝ prior × likelihood), with π_i the prior and N(·) the likelihood.`},
+    {text:`EM-GMM assumes independence between variables within clusters, so any pair of variables is expected to have zero covariance within a cluster.`, ans:false,
+     exp:`The general GMM fits a <b>full covariance matrix</b> Σ_i per component; non-zero off-diagonal entries model correlation between variables. No independence/zero-covariance assumption is made (that would only happen if you deliberately restrict Σ_i to be diagonal).`},
+    {text:`With densities at x equal to 0.0086 (C1) and 0.0136 (C2) and priors π_{C1}=0.3, π_{C2}=0.7, the posteriors at x are ≈ 0.213 and 0.787.`, ans:true,
+     exp:`Posterior(C1) = (0.3·0.0086)/((0.3·0.0086)+(0.7·0.0136)) = 0.00258/0.0121 ≈ <b>0.213</b>; Posterior(C2) = 0.00952/0.0121 ≈ <b>0.787</b>. Correct.`},
+    {text:`Knowing both covariance matrices are diagonal, the induced clusters are necessarily spherical, not elliptical.`, ans:false,
+     exp:`A <b>diagonal</b> covariance gives <b>axis-aligned</b> ellipsoids. It is spherical only in the special case where all diagonal variances are equal (Σ = σ²·I). With unequal diagonal entries the cluster is elliptical, so "necessarily spherical" is false.`},
+    {text:`A main advantage of EM-GMM over k-Means is that EM-GMM is not sensitive to initialization of cluster centers.`, ans:false,
+     exp:`EM-GMM maximises the (log-)likelihood and converges only to a <b>local optimum</b>, so it is just as sensitive to initialization as k-Means (in fact it is often initialized using k-Means).`},
+  ]
+},
+{
+  id:2, points:"XXX", tag:"Density estimation / clustering / outliers",
+  stem:`Consider a unidimensional dataset <span class="ds">{ -20, -10, 10, 40, 55, 95, 100 }</span>. Which of the following statements are correct?`,
+  statements:[
+    {text:`Fitting a single univariate Normal by MLE gives optimal parameters equal to the sample mean μ = (−20−10+10+40+55+95+100)/7 and variance σ² = ( Σ (x−μ)² )/7.`, ans:true,
+     exp:`For a single Normal the MLE is intuitive: μ̂ = sample mean, σ̂² = (1/n)·Σ(x−μ̂)². Note MLE divides by <b>n</b> (here 7), exactly as written — so this is correct. (μ ≈ 38.57, σ² ≈ 1976.5.)`},
+    {text:`We can be certain, without computing, that Single-Linkage and Complete-Linkage hierarchical clustering give the same result because the data is unidimensional.`, ans:false,
+     exp:`Dimensionality is irrelevant. Single-linkage uses the <b>minimum</b> inter-cluster distance and complete-linkage the <b>maximum</b>; they generally produce different merges and dendrograms even in 1-D.`},
+    {text:`The parallel/distributed version of k-means cannot run here because 7 (odd) points cannot be split evenly across nodes, which the algorithm requires.`, ans:false,
+     exp:`Fabricated constraint. Parallel/distributed k-means imposes no requirement of an even or equal split of observations across nodes; an odd count is no obstacle.`},
+    {text:`Unweighted KNN outlier detection with k = 1 gives, for any Minkowski distance, the outlier scores {10, 10, 20, 15, 15, 5, 5}.`, ans:true,
+     exp:`In 1-D every Minkowski distance reduces to |x_i − x_j|. The k=1 score is the distance to the nearest neighbour: −20→10, −10→10, 10→20, 40→15, 55→15, 95→5, 100→5. Matches.`},
+    {text:`With ε = 15 and MinPts = 1 or 2, DBSCAN produces in both cases 4 clusters: C1={−20,−10}, C2={10}, C3={40,55}, C4={95,100}.`, ans:false,
+     exp:`With <b>MinPts=1</b> every point is core → you do get those 4 clusters. But with <b>MinPts=2</b>, point 10 has only itself within ε=15 (the next points are 20 away), so it is neither core nor within ε of a core point → it becomes <b>noise</b>. MinPts=2 yields 3 clusters + 1 noise point, not 4 clusters, so "in both cases 4 clusters" is false.`},
+  ]
+},
+{
+  id:3, points:"XXX", tag:"Apriori / Association Rules",
+  stem:`Consider this transaction database. Apriori is run with a minimum support <b>count = 5</b>.
+  <table class="data"><tr><th>TID</th><th>Items</th></tr>
+  <tr><td>1</td><td>BEER, CRACKERS</td></tr>
+  <tr><td>2</td><td>BREAD, BUTTER, DIAPERS, MILK</td></tr>
+  <tr><td>3</td><td>BEER, DIAPERS</td></tr>
+  <tr><td>4</td><td>BREAD, BUTTER, DIAPERS, MILK</td></tr>
+  <tr><td>5</td><td>BREAD, BUTTER, DIAPERS, MILK</td></tr>
+  <tr><td>6</td><td>BEER, CRACKERS, DIAPERS</td></tr>
+  <tr><td>7</td><td>BREAD, BUTTER, CRACKERS</td></tr>
+  <tr><td>8</td><td>BREAD, CRACKERS, DIAPERS, MILK</td></tr>
+  <tr><td>9</td><td>BREAD, BUTTER, MILK</td></tr>
+  <tr><td>10</td><td>BEER, BREAD, DIAPERS, MILK</td></tr>
+  <tr><td>11</td><td>BUTTER, DIAPERS</td></tr>
+  <tr><td>12</td><td>BREAD, BUTTER, DIAPERS</td></tr></table>
+  1-item supports: BEER(4), BREAD(8), BUTTER(7), CRACKERS(4), DIAPERS(9), MILK(6).
+  Candidate 2-itemsets (support): {BREAD,BUTTER}=6, {BREAD,DIAPERS}=6, {BREAD,MILK}=6, {BUTTER,DIAPERS}=5, <b>{BUTTER,MILK}=4</b>, {DIAPERS,MILK}=5.`,
+  statements:[
+    {text:`Apriori will produce the candidate 3-itemset {BUTTER, DIAPERS, MILK} from the candidate 2-itemsets, then compute its support as 3 and decide it is not frequent.`, ans:false,
+     exp:`{BUTTER,DIAPERS,MILK} contains the subset {BUTTER,MILK} whose support is 4 (&lt; 5, infrequent). By the <b>anti-monotonicity / prune step</b>, Apriori discards this candidate <b>without ever counting its support</b>. Its true support happens to be 3, but Apriori never computes it. False.`},
+    {text:`Apriori will produce the candidate 3-itemset {BREAD, BUTTER, MILK} and then must compute its support from the database before deciding whether it is frequent.`, ans:false,
+     exp:`The join step does generate {BREAD,BUTTER,MILK} (from {BREAD,BUTTER} and {BREAD,MILK}), but the <b>prune step</b> immediately removes it because its subset {BUTTER,MILK} is infrequent (support 4). So Apriori does <b>not</b> need a database scan for it. False.`},
+    {text:`Based only on the candidate 2-itemset table, we can be sure {DIAPERS, MILK} is a maximal frequent itemset.`, ans:false,
+     exp:`Maximality cannot be judged from 2-itemsets alone. In fact {BREAD,DIAPERS,MILK} is frequent (support 5) — a frequent <b>superset</b> of {DIAPERS,MILK} — so {DIAPERS,MILK} is <b>not</b> maximal. False.`},
+    {text:`{BREAD, DIAPERS} is a closed frequent itemset.`, ans:true,
+     exp:`{BREAD,DIAPERS} has support 6. A set is <b>closed</b> if no superset has the same support. Adding MILK→5, BUTTER→4, CRACKERS→1, BEER→1 — none keeps support 6. So no superset matches its support ⇒ it is closed. True.`},
+    {text:`A valid rule from the frequent 3-itemsets is {DIAPERS} ⇒ {BREAD, MILK}, with support 5 and confidence 5/9.`, ans:true,
+     exp:`{BREAD,DIAPERS,MILK} is frequent with support 5, so the rule support is 5. Confidence = support({BREAD,DIAPERS,MILK}) / support({DIAPERS}) = 5/9. Both values correct. True.`},
+  ]
+},
+];
+
+/* ---------- render ---------- */
+const $=s=>document.querySelector(s);
+const state={}; // key `${q}-${s}` -> chosen bool ; checked set per question
+const checked={};
+const quiz=$("#quiz");
+
+QUIZ.forEach(q=>{
+  const card=document.createElement("div"); card.className="q"; card.id="q"+q.id;
+  const head=document.createElement("div"); head.className="qhead";
+  head.innerHTML=`<h2>Question ${q.id}</h2><span class="pts">[${q.points} Points]</span><span class="chip">${q.tag}</span>`;
+  card.appendChild(head);
+  const stem=document.createElement("div"); stem.className="stem"; stem.innerHTML=q.stem; card.appendChild(stem);
+
+  q.statements.forEach((st,si)=>{
+    const box=document.createElement("div"); box.className="stmt"; box.id=`s-${q.id}-${si}`;
+    box.innerHTML=`<div class="txt"><span class="n">${si+1}</span><span>${st.text}</span></div>`;
+    const tf=document.createElement("div"); tf.className="tf";
+    [["True","t"],["False","f"]].forEach(([lab,v])=>{
+      const b=document.createElement("button"); b.textContent="Yes/True"; 
+      b.textContent = lab==="True" ? "Yes / True" : "No / False";
+      b.dataset.v=v;
+      b.onclick=()=>{
+        if(checked[q.id]) return;
+        state[`${q.id}-${si}`]= (v==="t");
+        tf.querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+        b.classList.add("sel");
+      };
+      tf.appendChild(b);
+    });
+    box.appendChild(tf);
+    const exp=document.createElement("div"); exp.className="exp";
+    box.appendChild(exp);
+    card.appendChild(box);
+  });
+
+  const foot=document.createElement("div"); foot.className="qfoot";
+  foot.innerHTML=`<button class="act" data-check="${q.id}">Check this question</button>
+                  <span class="qscore" id="qs-${q.id}"></span>`;
+  card.appendChild(foot);
+  quiz.appendChild(card);
+});
+
+function checkQuestion(qid){
+  const q=QUIZ.find(x=>x.id===qid);
+  let got=0;
+  q.statements.forEach((st,si)=>{
+    const box=$(`#s-${qid}-${si}`);
+    const tf=box.querySelector(".tf");
+    const exp=box.querySelector(".exp");
+    const chosen=state[`${qid}-${si}`];
+    tf.querySelectorAll("button").forEach(b=>{
+      b.classList.add("lock");
+      const isTrueBtn=b.dataset.v==="t";
+      if(isTrueBtn===st.ans) b.classList.add("right");           // mark the correct option
+      if(chosen!==undefined && (isTrueBtn===chosen) && chosen!==st.ans) b.classList.add("wrong");
+    });
+    const correct = chosen!==undefined && chosen===st.ans;
+    if(correct) got++;
+    exp.classList.add("show");
+    const v = chosen===undefined ? `<span class="v-no">Not answered</span> — correct answer: <b>${st.ans?'True':'False'}</b>`
+            : correct ? `<span class="v-ok">✓ Correct (${st.ans?'True':'False'})</span>`
+            : `<span class="v-no">✗ Incorrect</span> — correct answer: <b>${st.ans?'True':'False'}</b>`;
+    exp.innerHTML=`<div class="verdict">${v}</div><div>${st.exp}</div>`;
+  });
+  checked[qid]=true;
+  $(`#qs-${qid}`).innerHTML=`Question score: <b>${got}/5</b>`;
+  document.querySelector(`[data-check="${qid}"]`).disabled=true;
+  document.querySelector(`[data-check="${qid}"]`).style.opacity=.5;
+  updateTotal();
+}
+function updateTotal(){
+  let cor=0;
+  QUIZ.forEach(q=>{ if(checked[q.id]) q.statements.forEach((st,si)=>{ if(state[`${q.id}-${si}`]===st.ans) cor++; }); });
+  $("#sCor").textContent=cor;
+  $("#sBar").style.width=(100*cor/15)+"%";
+}
+document.querySelectorAll("[data-check]").forEach(b=> b.onclick=()=>checkQuestion(+b.dataset.check));
+$("#checkAll").onclick=()=>QUIZ.forEach(q=>{ if(!checked[q.id]) checkQuestion(q.id); });
+$("#resetAll").onclick=()=>{ location.reload(); };
+</script>
+</body>
+</html>
