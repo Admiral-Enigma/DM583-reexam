@@ -1,9 +1,14 @@
 from math import log
-from dist import Vector
+from .dist import Vector
 
 def bayes(likelihood: float, prior: float, evidence: float) -> float:
   "Posterior P(Y|X) = P(X|Y) P(Y) / P(X)."
   return likelihood * prior / evidence
+
+def posteriors(densities: Vector, priors: Vector) -> list[float]:
+  "Posteriors from per-class densities at one x and priors (Bayes, shared evidence)."
+  joint = [d*p for d, p in zip(densities, priors)]
+  return [j/sum(joint) for j in joint]
 
 def expect(vals: Vector, probs: Vector) -> float:
   "Expectation E[X] = sum x_i P(x_i)."
@@ -26,6 +31,18 @@ def cov(u: Vector, v: Vector, sample: bool = True) -> float:
   "Covariance between two equal-length sequences."
   mu, mv = mean(u), mean(v)
   return sum((x-mu)*(y-mv) for x, y in zip(u, v)) / (len(u) - (1 if sample else 0))
+
+def mle(v: Vector, verbose: bool = True) -> tuple[float, float]:
+  "Gaussian MLE (mu, sigma^2): variance divides by n, NOT n-1. Shows work."
+  n = len(v)
+  mu = sum(v)/n
+  ss = sum((x-mu)**2 for x in v)
+  s2 = ss/n
+  if verbose:
+    print(f"mu      = sum x / n       = {sum(v):g}/{n} = {mu:.6g}")
+    print(f"sigma^2 = sum (x-mu)^2 / n = {ss:.6g}/{n} = {s2:.6g}   (MLE: /n, NOT /(n-1)={n-1})")
+    print(f"sigma   = {s2**.5:.6g}")
+  return mu, s2
 
 def marginal(joint: Vector, axis: int) -> list[float]:
   "Marginal (sum rule) of a 2-D joint table over the given axis (0=rows,1=cols)."

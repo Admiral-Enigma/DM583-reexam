@@ -1,4 +1,4 @@
-from dist import Vector, Matrix, eucd
+from .dist import Vector, Matrix, eucd
 
 def db_outlier(data: Matrix, eps: float, pi: float, d=eucd) -> list[bool]:
   """
@@ -46,3 +46,23 @@ def lof(data: Matrix, k: int, d=eucd) -> list[float]:
   """
   return [sum(lrd(data, o, k, d) for o in knn(data, i, k, d))
           / (len(knn(data, i, k, d)) * lrd(data, i, k, d)) for i in range(len(data))]
+
+def lof_table(data: Matrix, k: int, d=eucd, labels=None) -> tuple[list[float], list[float]]:
+  """
+  Print the full LOF pipeline per point: k-dist, kNN neighbourhood (ties included),
+  each reach-dist = max(k-dist(o), d(p,o)), lrd, LOF. Returns (lrds, lofs).
+  """
+  n = len(data)
+  name = (lambda i: labels[i]) if labels else (lambda i: str(i))
+  Ns = [knn(data, i, k, d) for i in range(n)]
+  lrds = [lrd(data, i, k, d) for i in range(n)]
+  lofs = []
+  for i in range(n):
+    rds = [f"rd({name(i)}<-{name(o)})=max({kdist(data,o,k,d):g},{d(data[i],data[o]):g})={reachdist(data,i,o,k,d):g}"
+           for o in Ns[i]]
+    L = sum(lrds[o] for o in Ns[i]) / (len(Ns[i]) * lrds[i])
+    lofs.append(L)
+    print(f"  {name(i)}: k-dist={kdist(data,i,k,d):g}  N_{k}={{{','.join(name(o) for o in Ns[i])}}}"
+          f"  lrd={lrds[i]:.4f}  LOF={L:.4f}")
+    print(f"      {'  '.join(rds)}")
+  return lrds, lofs

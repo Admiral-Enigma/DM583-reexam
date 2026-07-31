@@ -1,0 +1,25 @@
+[project]
+name = "dm583-reexam"
+version = "0.1.0"
+description = "DM583 re-exam toolkit: uv run python -> from exam import *"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.0",
+    "scipy>=1.13",
+]
+
+[project.scripts]
+apriori-csv = "exam.apriori:main"
+
+[build-system]
+requires = ["uv_build>=0.8,<0.9"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "exam"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]

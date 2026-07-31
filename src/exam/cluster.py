@@ -1,4 +1,4 @@
-from dist import Vector, Matrix, eucd
+from .dist import Vector, Matrix, eucd
 
 # ---------- k-Means / partitioning ----------
 
@@ -41,12 +41,35 @@ def silhouette(data: Matrix, labels: Vector, d=eucd) -> float:
     ss.append((b-a)/max(a, b))
   return sum(ss)/len(ss)
 
+def simp_silhouette(data: Matrix, labels: Vector, d=eucd, verbose: bool = True) -> list[float]:
+  """
+  SIMPLIFIED silhouette per point (centroid-based, what the exam asks per observation):
+  a(i) = d(i, own centroid), b(i) = min d(i, other centroid), s = (b-a)/max(a,b).
+  Returns [s(i)]. NB: a singleton cluster gets a=0 => s=1 under this definition.
+  """
+  cl = sorted(set(labels))
+  cents = {c: centroid([data[i] for i in range(len(data)) if labels[i] == c]) for c in cl}
+  ss = []
+  for i in range(len(data)):
+    a = d(data[i], cents[labels[i]])
+    b = min(d(data[i], cents[c]) for c in cl if c != labels[i])
+    s = 0.0 if max(a, b) == 0 else (b-a)/max(a, b)
+    ss.append(s)
+    if verbose:
+      print(f"  i={i} x={list(data[i])} cluster={labels[i]}  a={a:.4f}  b={b:.4f}  s=(b-a)/max(a,b)={s:.4f}")
+  if verbose:
+    print(f"  mean simplified silhouette = {sum(ss)/len(ss):.4f}")
+  return ss
+
 # ---------- agglomerative hierarchical ----------
+
+AHC_METHODS = ("single", "complete", "average", "ward")
 
 def ahc(D: Matrix, method: str = "single") -> list[tuple]:
   """
   Agglomerative hierarchical clustering from distance matrix D.
-  method in {single, complete, average, ward}.
+  method in {single, complete, average, ward}. Ward uses the Lance-Williams
+  recursion on SQUARED distances (matches scipy for Euclidean input).
   Returns merges [(clusterA, clusterB, height), ...] in order;
   clusters are tuples of original 0-based indices.
   """
@@ -65,7 +88,8 @@ def ahc(D: Matrix, method: str = "single") -> list[tuple]:
       elif method == "average":  dnew = (len(a)*da + len(b)*db)/(len(a)+len(b))
       elif method == "ward":
         s = len(a)+len(b)+len(c)
-        dnew = ((len(a)+len(c))*da + (len(b)+len(c))*db - len(c)*dist[key(a, b)])/s
+        dnew = (((len(a)+len(c))*da**2 + (len(b)+len(c))*db**2
+                 - len(c)*dist[key(a, b)]**2)/s)**.5
       dist[key(new, c)] = dnew
     act = [x for x in act if x not in (a, b)] + [new]
     dist = {k: v for k, v in dist.items() if a not in k and b not in k}
@@ -80,6 +104,65 @@ def cut(merges: list[tuple], n: int, k: int) -> list[set]:
     B = next(c for c in cl if set(b) <= c)
     cl.remove(A); cl.remove(B); cl.append(A | B)
   return cl
+
+def _fmt_cl(c, labels=None) -> str:
+  return "{" + ",".join(labels[i] if labels else str(i) for i in c) + "}"
+
+def ahc_all(D: Matrix, labels=None, methods=AHC_METHODS) -> dict[str, list[tuple]]:
+  """
+  Run AHC with every linkage; print each merge sequence with heights, then the
+  height lists side by side (+ scipy cross-check if available). Returns {method: merges}.
+  """
+  out = {}
+  for m in methods:
+    out[m] = ahc(D, m)
+    print(f"\n{m}:")
+    for s, (a, b, h) in enumerate(out[m], 1):
+      print(f"  {s}. {_fmt_cl(a, labels)} + {_fmt_cl(b, labels)}   h = {h:g}")
+  print("\nmerge heights:")
+  for m in methods:
+    print(f"  {m:<9} {[round(h, 4) for *_, h in out[m]]}")
+  try:
+    import numpy as np
+    from scipy.spatial.distance import squareform
+    from scipy.cluster.hierarchy import linkage
+    cond = squareform(np.array(D), checks=False)
+    print("scipy cross-check:")
+    for m in methods:
+      print(f"  {m:<9} {[round(float(h), 4) for h in linkage(cond, m)[:, 2]]}")
+  except ImportError:
+    pass
+  return out
+
+def match_dendrogram(D: Matrix, heights: Vector, labels=None, merges=None,
+                     tol: float = 1e-6, methods=AHC_METHODS) -> dict[str, tuple]:
+  """
+  Does a dendrogram with the given merge heights (e.g. [2, 6, 8, 10]) correspond
+  to each linkage on D?  scale match = computed heights equal `heights`;
+  topology match (only checked if `merges` is given as an ordered list of pairs of
+  index-tuples, e.g. [((0,),(1,)), ((0,1),(2,))]) = same clusters merged per step.
+  "Corresponds to X-linkage" requires BOTH. Returns {method: (topology, scale)}.
+  """
+  res = {}
+  want_h = sorted(heights)
+  for m in methods:
+    mg = ahc(D, m)
+    hs = sorted(h for *_, h in mg)
+    scale = len(hs) == len(want_h) and all(abs(a-b) <= tol for a, b in zip(hs, want_h))
+    topo = None
+    if merges is not None:
+      want_t = [frozenset((frozenset(a), frozenset(b))) for a, b in merges]
+      got_t = [frozenset((frozenset(a), frozenset(b))) for a, b, _ in mg]
+      topo = got_t == want_t
+    res[m] = (topo, scale)
+    seq = "  ".join(f"{_fmt_cl(a, labels)}+{_fmt_cl(b, labels)}@{h:g}" for a, b, h in mg)
+    t = {None: "n/a (pass merges=...)", True: "YES", False: "NO"}[topo]
+    verdict = "CORRESPONDS" if scale and topo else \
+              "does NOT correspond" if scale is False or topo is False else "heights match, topology unchecked"
+    print(f"{m:<9} heights {[round(h,4) for h in hs]} vs claimed {want_h} -> scale {'YES' if scale else 'NO'}; topology {t}")
+    print(f"          {seq}")
+    print(f"          => {verdict}")
+  return res
 
 # ---------- DBSCAN ----------
 
