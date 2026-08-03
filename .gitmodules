@@ -1,0 +1,3 @@
+[submodule "chan24_code/datamining"]
+	path = chan24_code/datamining
+	url = https://gitlab.sdu.dk/chhan24/datamining.git
