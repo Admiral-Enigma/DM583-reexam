@@ -121,6 +121,13 @@ def test_conf_compare_june_q8():
   c1, c2 = conf_compare(db, "AD", "C", moved="D")
   assert c2 <= c1  # conf(A=>CD) <= conf(AD=>C)
 
+def test_dist_compare_june_q3():
+  assert dist_compare([[1, 2], [2, 1]]) is False   # Q3.1: Mah != Euc
+  assert dist_compare([[1, 0], [0, 1]]) is True    # Sigma = I -> equal
+
+def test_binary_compare_runs():
+  binary_compare([1, 1, 0], [1, 0, 1], pad=20)     # smoke: prints, no crash
+
 def test_density_report_june_q1():
   data = [1, 1, 2, 2, 3, 4, 4, 4, 5, 5, 5, 5, 6, 9, 9, 10, 10, 10, 10, 11]
   r = density_report(data, [("kernel", 4, 1), ("knn", 7, 2), ("knn", 7, 1), ("kernel", 4, 2)])

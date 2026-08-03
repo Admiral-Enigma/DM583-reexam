@@ -73,6 +73,36 @@ def analyze(text, metric="euc", k: int | None = None, db=None) -> dict:
       res[f"dbscan({eps:g},{mp})"] = dict(zip(labels, zip(cl, typ)))
   return res
 
+def cheat() -> None:
+  "Print the one-line usage map for every exam tool (use help(fn) for details)."
+  print("""\
+GEOMETRIC (Q2/Q6): res = analyze("A 5 2 / B 1 7 / ...", metric="man"|"euc"|"sup", k=2, db=(2, 6))
+                   -> prints dist matrix, kNN scores, LOF table, DBSCAN; returns score dicts
+  ordering sub:    check_order("C,D,E", res["lof"])   or res["knn"]
+DBSCAN (Q6):       analyze("A 2 4 / B 4 4 / ...", "man", db=[(2, 6), (2, 4), (2, 2)])
+                   -> one run per (eps, MinPts) sub: clusters + core/border/noise per point
+                   (point counts itself; res["dbscan(2,6)"]["S"] -> (cluster_id, "border"))
+DENSITY (Q1):      discrete_kernel(data, x=4, h=1)    knn_density(data, x=7, k=2)
+  one shot:        density_report(data, [("kernel", 4, 1), ("knn", 7, 2)])
+AHC (Q4):          D = proxmat(pts, mand)  or paste the matrix as list of rows
+                   ahc_all(D, labels=["1","2","3","4","5"])
+  figure match:    match_dendrogram(D, [2, 6, 8, 10])     # scale verdict per linkage
+  cut at level:    cut_height(D, "single", 4, labels=[...])
+APRIORI (Q5/Q8):   db = parse_db("A,B,C,D / A,C,D,F / ...")
+                   apriori(db, 3)                 # levels: join -> prune(named) -> counts
+                   prunable(("B","C","D","E"), [("A","B","C"), ...])   # Q5 in one call
+                   rule(db, "AD", "C")            # supp count, rel, conf fraction, lift
+                   conf_compare(db, "AD", "C", moved="D")   # conf monotonicity (Q8.1)
+SIMILARITY (Q3):   dist_compare([[1,2],[2,1]])    # Mah vs Euc/Man/Sup per point + PSD check
+                   binary_compare([1,1,0], [1,0,1], pad=20)   # SMC vs Jaccard vs cosine, 0-0 effect
+GMM (Q7):          mstep1d(xs, gammas)            # gammas rows=points: [[.9,.1], ...]
+                   hard_partition(gammas)         param_count(k=2, d=1)
+                   check_claim("mu1", computed, 14.2/3.8)
+K-MEANS (Q9):      data = dict(A=2, B=4, ...)
+                   kmeans_trace(data, [2, 4.5, 6])          # iterations + final clusters
+                   analyze_partitions(data, {"P1": [["A","B"], ...]}, compare_point="A")
+RULES: answer only what a tool printed. Recall < 75% sure -> BLANK. help(fn) for details.""")
+
 def check_order(order: str, scores: dict, strict: bool = False) -> bool:
   """
   Is this subset correctly ordered by score, non-strictly decreasing (the exact

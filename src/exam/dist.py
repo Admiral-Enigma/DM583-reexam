@@ -100,6 +100,50 @@ def mahalanobis(x: Vector, mean: Vector, cov: Matrix) -> float:
   d, inv = [a-b for a, b in zip(x, mean)], matinv(cov)
   return sum(d[i]*inv[i][j]*d[j] for i in range(len(d)) for j in range(len(d)))**.5
 
+# ---------- Q3-style claim testers ----------
+
+def dist_compare(Sigma: Matrix | None = None, mean: Vector = (0, 0),
+                 points: Matrix | None = None) -> bool:
+  """
+  June-Q3.1/Q3.4 in one call: for each test point print Mahalanobis (under
+  Sigma), Euclidean, Manhattan and Suprema distance to `mean` side by side,
+  and say which coincide. Claims like 'Mahalanobis = Euclidean for this Sigma'
+  or 'all four equal on an axis' are settled by trying arbitrary points —
+  default points include axis and off-axis cases.
+  Returns True iff Mahalanobis == Euclidean for ALL tested points.
+  """
+  if Sigma is None: Sigma = [[1, 0], [0, 1]]
+  if points is None: points = [[3, 0], [0, 2], [1, 1], [2, -1]]
+  print(f"Sigma = {Sigma}   (Mahalanobis = Euclidean for all points iff Sigma = I)")
+  dt = det(Sigma)
+  if dt <= 0:
+    print(f"  NOTE: det(Sigma) = {dt:g} <= 0 -> not a valid (PSD) covariance matrix!")
+  all_me = True
+  for x in points:
+    dm = mahalanobis(x, mean, Sigma)
+    de, dman, ds = eucd(x, mean), mand(x, mean), supd(x, mean)
+    me = abs(dm - de) < 1e-9
+    all_me &= me
+    same4 = "  <- all four EQUAL" if me and abs(de-dman) < 1e-9 and abs(de-ds) < 1e-9 else ""
+    print(f"  x={x}: Mah={dm:.4f}  Euc={de:.4f}  Man={dman:.4f}  Sup={ds:.4f}"
+          f"  Mah{'=' if me else '!='}Euc{same4}")
+  print(f"  => Mahalanobis == Euclidean for all tested points: {all_me}")
+  return all_me
+
+def binary_compare(u: Vector, v: Vector, pad: int = 0) -> None:
+  """
+  June-Q3.2/Q3.3 in one call: contingency counts, SMC, Jaccard and cosine for
+  two binary vectors; `pad` appends that many shared-0 columns to show what is
+  (in)sensitive to 0-0 matches (cosine and Jaccard ignore them; SMC does not).
+  """
+  for extra in ([0, pad] if pad else [0]):
+    uu, vv = list(u) + [0]*extra, list(v) + [0]*extra
+    n11, n10, n01, n00 = contingency(uu, vv)
+    print(f"  +{extra} zero-cols: f11={n11} f10={n10} f01={n01} f00={n00}"
+          f"   SMC={smc(uu, vv):.4f}  Jaccard={jaccard(uu, vv):.4f}"
+          f"   cosine={cosine(uu, vv):.4f}")
+  print("  (SMC = Jaccard iff f00 = 0; cosine & Jaccard never see f00)")
+
 # ---------- pre-processing ----------
 
 def zscore(col: Vector) -> list[float]:

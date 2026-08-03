@@ -47,6 +47,11 @@
   .t-head{display:flex; justify-content:space-between; align-items:baseline; padding:14px 20px; border-bottom:1px solid var(--line);}
   .t-head h2{font-size:18px; margin:0;}
   .t-head .pts{font-family:ui-monospace, Menlo, monospace; font-size:12px; color:var(--soft);}
+  .t-head .grade-sec{font-family:ui-monospace, Menlo, monospace; font-size:11px; font-weight:600;
+    padding:4px 12px; border:1.5px solid var(--ink); border-radius:14px; background:transparent;
+    color:var(--ink); cursor:pointer; margin-left:10px; white-space:nowrap;}
+  .t-head .grade-sec:hover{background:#EEEEE8;}
+  .t-head .grade-sec:disabled{cursor:default; background:var(--ink); color:#fff; opacity:1;}
   .setup{padding:12px 20px; background:#F7F5EC; border-bottom:1px solid var(--line); font-size:13.5px; color:#4d4630;}
   .setup code{font-family:ui-monospace, Menlo, monospace; font-size:12.5px;}
 
@@ -347,6 +352,7 @@ root.addEventListener('click', e => {
   const b = e.target.closest('.b');
   if (!b || checked) return;
   const qDiv = b.closest('.q');
+  if (qDiv.classList.contains('revealed')) return;
   const i = +qDiv.dataset.index;
   const v = b.dataset.v === 'blank' ? 'blank' : b.dataset.v === 'true';
   answers[i] = (answers[i] === v) ? null : v;   // click again to unselect
@@ -365,6 +371,44 @@ progress();
 
 const fmt = x => (Math.round(x * 10) / 10).toString();
 
+function revealItem(qDiv){
+  const i = +qDiv.dataset.index;
+  const q = QUESTIONS[i];
+  const per = topicMeta[q.topic].per;
+  const v = answers[i];
+  let d = 0, cls;
+  if (v === null || v === 'blank') cls = 'skip';
+  else if (v === q.answer) { d = per; cls = 'ok'; }
+  else { d = -per; cls = 'bad'; }
+  qDiv.classList.add('revealed', cls);
+  qDiv.querySelector('.explain').textContent = q.explain;
+  qDiv.querySelector('.delta').textContent =
+    cls === 'skip' ? '±0' : (d > 0 ? `+${fmt(d)}` : `−${fmt(-d)}`);
+  qDiv.querySelectorAll('.b').forEach(b => {
+    if (b.dataset.v === String(q.answer)) b.classList.add('truth');
+  });
+  return { d, cls };
+}
+
+
+document.querySelectorAll('section.topic').forEach(sec => {
+  const btn = document.createElement('button');
+  btn.className = 'grade-sec';
+  btn.textContent = 'Grade';
+  sec.querySelector('.t-head').appendChild(btn);
+  btn.addEventListener('click', () => {
+    if (checked || btn.disabled) return;
+    let s = 0, ok = 0, bad = 0, blank = 0;
+    sec.querySelectorAll('.q').forEach(qDiv => {
+      const { d, cls } = revealItem(qDiv);
+      s += d;
+      if (cls === 'ok') ok++; else if (cls === 'bad') bad++; else blank++;
+    });
+    btn.textContent = `${fmt(s)} / ${fmt(topicMeta[sec.dataset.topic].pts)} · ${ok}✓ ${bad}✗ ${blank}—`;
+    btn.disabled = true;
+  });
+});
+
 document.getElementById('checkBtn').addEventListener('click', () => {
   if (checked) return;
   const undecided = answers.filter(a => a === null).length;
@@ -376,25 +420,15 @@ document.getElementById('checkBtn').addEventListener('click', () => {
   for (const t in topicMeta) perTopic[t] = { score: 0, ok: 0, bad: 0, blank: 0 };
 
   document.querySelectorAll('.q').forEach(qDiv => {
-    const i = +qDiv.dataset.index;
-    const q = QUESTIONS[i];
+    const q = QUESTIONS[+qDiv.dataset.index];
     const per = topicMeta[q.topic].per;
     max += per;
-    const v = answers[i];
-    let d = 0, cls;
-    if (v === null || v === 'blank') { cls = 'skip'; nBlank++; perTopic[q.topic].blank++; }
-    else if (v === q.answer) { d = per; cls = 'ok'; nOk++; perTopic[q.topic].ok++; }
-    else { d = -per; cls = 'bad'; nBad++; lost += per; perTopic[q.topic].bad++; }
+    const { d, cls } = revealItem(qDiv);
+    if (cls === 'skip') { nBlank++; perTopic[q.topic].blank++; }
+    else if (cls === 'ok') { nOk++; perTopic[q.topic].ok++; }
+    else { nBad++; lost += per; perTopic[q.topic].bad++; }
     total += d;
     perTopic[q.topic].score += d;
-
-    qDiv.classList.add('revealed', cls);
-    qDiv.querySelector('.explain').textContent = q.explain;
-    qDiv.querySelector('.delta').textContent =
-      cls === 'skip' ? '±0' : (d > 0 ? `+${fmt(d)}` : `−${fmt(-d)}`);
-    qDiv.querySelectorAll('.b').forEach(b => {
-      if (b.dataset.v === String(q.answer)) b.classList.add('truth');
-    });
   });
 
   const pct = total / max * 100;
@@ -422,6 +456,15 @@ document.getElementById('checkBtn').addEventListener('click', () => {
     cf.innerHTML = `Zero wrong answers — perfect calibration. ${nBlank > 0 ? `Now work on converting the ${nBlank} blank(s) into computed answers.` : 'Nothing left to blank.'}`;
   }
 
+  document.querySelectorAll('section.topic').forEach(sec => {
+    const b = sec.querySelector('.grade-sec');
+    if (!b.disabled) {
+      const r = perTopic[sec.dataset.topic];
+      b.textContent = `${fmt(r.score)} / ${fmt(topicMeta[sec.dataset.topic].pts)} · ${r.ok}✓ ${r.bad}✗ ${r.blank}—`;
+      b.disabled = true;
+    }
+  });
+
   document.getElementById('readout').innerHTML =
     `<strong>${fmt(total)} / ${fmt(max)}</strong> · ${nOk}✓ ${nBad}✗ ${nBlank}—`;
   document.getElementById('fill').style.width = '100%';
@@ -439,6 +482,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     qDiv.querySelector('.delta').textContent = '';
     qDiv.querySelectorAll('.b').forEach(b => b.classList.remove('sel', 'truth'));
   });
+  document.querySelectorAll('.grade-sec').forEach(b => { b.textContent = 'Grade'; b.disabled = false; });
   document.getElementById('report').classList.remove('show');
   document.getElementById('checkBtn').disabled = false;
   progress();
