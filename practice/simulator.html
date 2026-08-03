@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DM583 Exam Simulator — ± Scoring Drill</title>
+<style>
+  :root{
+    --bg:#F4F4F0;
+    --card:#FFFFFF;
+    --ink:#1A1E28;
+    --soft:#5A6172;
+    --line:#DDDDD4;
+    --accent:#2B4C7E;
+    --good:#2E6B4F;
+    --good-bg:#E2F0E8;
+    --bad:#A63A2E;
+    --bad-bg:#F6E2DE;
+    --blank:#8A7B4F;
+    --blank-bg:#F1ECDB;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size:15px;
+    line-height:1.55;
+    padding-bottom:110px;
+  }
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px;}
+  header{padding:40px 0 18px 0; border-bottom:3px solid var(--ink);}
+  header .kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--soft); font-family:ui-monospace, Menlo, monospace;}
+  h1{font-size:30px; margin:6px 0 8px 0;}
+  header p{margin:0; color:var(--soft); max-width:640px;}
+  header p strong{color:var(--ink);}
+
+  .scorebar{position:sticky; top:0; z-index:20; background:rgba(244,244,240,.94); backdrop-filter:blur(4px); border-bottom:1px solid var(--line); padding:9px 0;}
+  .scorebar-inner{max-width:860px; margin:0 auto; padding:0 24px; display:flex; gap:16px; align-items:center;}
+  .track{flex:1; height:7px; background:var(--line); border-radius:8px; overflow:hidden;}
+  .fill{height:100%; width:0%; background:var(--accent); transition:width .2s;}
+  .readout{font-family:ui-monospace, Menlo, monospace; font-size:13px; color:var(--soft); white-space:nowrap;}
+  .readout strong{color:var(--ink);}
+
+  section.topic{margin:30px 0; background:var(--card); border:1px solid var(--line); border-radius:4px;}
+  .t-head{display:flex; justify-content:space-between; align-items:baseline; padding:14px 20px; border-bottom:1px solid var(--line);}
+  .t-head h2{font-size:18px; margin:0;}
+  .t-head .pts{font-family:ui-monospace, Menlo, monospace; font-size:12px; color:var(--soft);}
+  .setup{padding:12px 20px; background:#F7F5EC; border-bottom:1px solid var(--line); font-size:13.5px; color:#4d4630;}
+  .setup code{font-family:ui-monospace, Menlo, monospace; font-size:12.5px;}
+
+  .q{display:flex; gap:16px; align-items:flex-start; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .q:last-child{border-bottom:none;}
+  .q-text{flex:1; font-size:14.5px;}
+  .q-text .delta{font-family:ui-monospace, Menlo, monospace; font-size:12px; margin-left:6px;}
+  .explain{display:none; margin-top:9px; padding:8px 12px; font-size:13px; border-left:3px solid var(--soft); background:#F4F5F2; color:var(--soft);}
+  .q.revealed .explain{display:block;}
+
+  .btns{display:flex; gap:7px; flex-shrink:0;}
+  .b{min-width:54px; padding:7px 8px; text-align:center; font-family:ui-monospace, Menlo, monospace; font-size:12px; font-weight:600; border:1.5px solid var(--ink); background:var(--card); border-radius:18px; cursor:pointer; user-select:none;}
+  .b:hover{background:#EEEEE8;}
+  .b.sel{background:var(--ink); color:#fff;}
+  .b[data-v="blank"]{border-style:dashed; color:var(--soft); border-color:var(--soft);}
+  .b[data-v="blank"].sel{background:var(--blank); border-color:var(--blank); color:#fff;}
+  .q.revealed .b{cursor:default;}
+
+  .q.revealed.ok{background:var(--good-bg);}
+  .q.revealed.ok .b.sel{background:var(--good); border-color:var(--good); color:#fff;}
+  .q.revealed.bad{background:var(--bad-bg);}
+  .q.revealed.bad .b.sel{background:var(--bad); border-color:var(--bad); color:#fff;}
+  .q.revealed.skip{background:var(--blank-bg);}
+  .q.revealed .b.truth{box-shadow:0 0 0 2px var(--good) inset; border-color:var(--good);}
+  .q.revealed.ok .delta{color:var(--good);}
+  .q.revealed.bad .delta{color:var(--bad);}
+  .q.revealed.skip .delta{color:var(--blank);}
+
+  .report{display:none; margin:30px 0; border:2px solid var(--ink); background:var(--card); padding:22px 26px;}
+  .report.show{display:block;}
+  .report .big{font-size:34px; font-weight:700; font-family:ui-monospace, Menlo, monospace;}
+  .report .verdict{font-size:15px; margin-top:2px;}
+  .report .verdict.pass{color:var(--good); font-weight:600;}
+  .report .verdict.fail{color:var(--bad); font-weight:600;}
+  .report table{border-collapse:collapse; margin-top:14px; width:100%; font-size:13.5px;}
+  .report th, .report td{border:1px solid var(--line); padding:6px 10px; text-align:right;}
+  .report th:first-child, .report td:first-child{text-align:left;}
+  .report th{background:#F0F0EA; font-weight:600;}
+  .counterfactual{margin-top:14px; padding:11px 14px; background:var(--blank-bg); border-left:4px solid var(--blank); font-size:14px;}
+  .counterfactual strong{font-family:ui-monospace, Menlo, monospace;}
+
+  .controls{position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:2px solid var(--ink); padding:13px 24px; display:flex; justify-content:center; gap:12px; z-index:30;}
+  .btn{font-weight:600; font-size:14px; padding:10px 24px; border-radius:22px; border:1.5px solid var(--ink); cursor:pointer; background:var(--ink); color:#fff;}
+  .btn.sec{background:transparent; color:var(--ink);}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  footer{text-align:center; color:var(--soft); font-size:12px; margin-top:36px; font-family:ui-monospace, Menlo, monospace;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">DM583 · Data Mining · Re-exam Drill</div>
+    <h1>Exam Simulator with ± Scoring</h1>
+    <p>Scored like the real thing: correct <strong>+p/n</strong>, wrong <strong>−p/n</strong>, blank <strong>0</strong>.
+       Answer only what you can compute or are sure of — <strong>BLANK is a strategy</strong>.
+       Original drill items, verified by script.</p>
+  </header>
+</div>
+
+<div class="scorebar">
+  <div class="scorebar-inner">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="readout" id="readout">0 / 0 decided</div>
+  </div>
+</div>
+
+<div class="wrap" id="root">
+
+  <section class="topic" data-topic="density" data-pts="12">
+    <div class="t-head"><h2>1 · Non-Parametric Density Estimation</h2><span class="pts">12 pts · ±2 each</span></div>
+    <div class="setup">
+      Data (n=16): <code>X = {2, 3, 3, 4, 5, 5, 6, 8, 8, 9, 9, 9, 10, 12, 13, 15}</code><br>
+      Discrete kernel: count points with |x−x&#7522;| ≤ h/2 (inclusive), f&#770;(x) = count/(n·h).<br>
+      kNN density: r = distance to k-th NN, all ties at distance ≤ r counted, f&#770;(x) = k_eff/(n·2r).
+    </div>
+  </section>
+
+  <section class="topic" data-topic="outlier" data-pts="14">
+    <div class="t-head"><h2>2 · Outlier Detection (kNN / LOF)</h2><span class="pts">14 pts · ±2.8 each</span></div>
+    <div class="setup">
+      Manhattan (L&#8321;) distance, k = 2, query point excluded from its own neighbourhood.
+      "Correctly ordered" = non-strictly decreasing outlier scores.<br>
+      <code>A(1,2) &nbsp;B(2,1) &nbsp;C(2,3) &nbsp;D(3,2) &nbsp;E(6,6) &nbsp;F(7,5) &nbsp;G(2,7)</code>
+    </div>
+  </section>
+
+  <section class="topic" data-topic="ahc" data-pts="16">
+    <div class="t-head"><h2>3 · Hierarchical Clustering (AHC)</h2><span class="pts">16 pts · ±3.2 each</span></div>
+    <div class="setup">
+      Distance matrix over points 1–5:<br>
+      <code>d(1,2)=4 &nbsp;d(1,3)=10 &nbsp;d(1,4)=20 &nbsp;d(1,5)=18 &nbsp;d(2,3)=8</code><br>
+      <code>d(2,4)=18 &nbsp;d(2,5)=16 &nbsp;d(3,4)=12 &nbsp;d(3,5)=14 &nbsp;d(4,5)=6</code><br>
+      A dendrogram figure shows: {1,2} merge at height 4, {4,5} at 6, point 3 joins {1,2} at 8, root at 12.
+    </div>
+  </section>
+
+  <section class="topic" data-topic="apriori" data-pts="12">
+    <div class="t-head"><h2>4 · Apriori &amp; Association Rules</h2><span class="pts">12 pts · ±2 each</span></div>
+    <div class="setup">
+      Transactions (support σ = 3 as a <em>count</em>):<br>
+      <code>t1: A B D &nbsp;· t2: A C D &nbsp;· t3: B C E &nbsp;· t4: A B C D &nbsp;· t5: B D &nbsp;· t6: A C D E</code>
+    </div>
+  </section>
+
+  <section class="topic" data-topic="dbscan" data-pts="10">
+    <div class="t-head"><h2>5 · DBSCAN</h2><span class="pts">10 pts · ±2.5 each</span></div>
+    <div class="setup">
+      Manhattan (L&#8321;) distance; the query point counts as a member of its own ε-neighbourhood.<br>
+      <code>P1(1,1) &nbsp;P2(2,1) &nbsp;P3(2,2) &nbsp;P4(3,2) &nbsp;P5(3,3) &nbsp;P6(6,6) &nbsp;P7(7,6) &nbsp;P8(7,7)</code>
+    </div>
+  </section>
+
+  <section class="topic" data-topic="gmm" data-pts="10">
+    <div class="t-head"><h2>6 · EM for Gaussian Mixtures</h2><span class="pts">10 pts · ±2 each</span></div>
+    <div class="setup">
+      1-D data x = (1, 2, 6, 8, 3) with converged posteriors for component C&#8321;:<br>
+      <code>γ&#8321; = (0.9, 0.8, 0.2, 0.1, 0.7)</code> &nbsp;and&nbsp; γ&#8322; = 1 − γ&#8321; per point.
+    </div>
+  </section>
+
+  <section class="topic" data-topic="kmeans" data-pts="14">
+    <div class="t-head"><h2>7 · k-Means &amp; SSE</h2><span class="pts">14 pts · ±2.8 each</span></div>
+    <div class="setup">
+      1-D observations, k = 3: <code>A=1 &nbsp;B=2 &nbsp;C=3 &nbsp;D=8 &nbsp;E=9 &nbsp;F=10 &nbsp;G=15 &nbsp;H=16</code><br>
+      One iteration = assign all points to nearest centroid, then update centroids.
+    </div>
+  </section>
+
+  <section class="topic" data-topic="similarity" data-pts="10">
+    <div class="t-head"><h2>8 · Similarity &amp; Distance Measures</h2><span class="pts">10 pts · ±2.5 each</span></div>
+    <div class="setup">
+      Mahalanobis: d&#8344;(x,μ) = √((x−μ)&#7488;Σ&#8315;&#185;(x−μ)) &nbsp;·&nbsp;
+      Jaccard: f&#8321;&#8321;/(f&#8320;&#8321;+f&#8321;&#8320;+f&#8321;&#8321;) &nbsp;·&nbsp;
+      SMC: (f&#8321;&#8321;+f&#8320;&#8320;)/all
+    </div>
+  </section>
+
+  <div class="report" id="report">
+    <div class="big" id="scoreBig">—</div>
+    <div class="verdict" id="verdict"></div>
+    <div id="breakdown"></div>
+    <div class="counterfactual" id="counterfactual"></div>
+  </div>
+
+  <footer>drill items composed & verified for the August re-exam — not reproductions of any exam</footer>
+</div>
+
+<div class="controls">
+  <button class="btn sec" id="resetBtn">Reset</button>
+  <button class="btn" id="checkBtn">Grade Like The Exam</button>
+</div>
+
+<script>
+// answer: true / false. User value: true / false / "blank".
+const QUESTIONS = [
+  // ---- density (12 pts, 6 items, ±2) ----
+  { topic:'density', text:'Discrete kernel, x = 5, h = 2: the estimate is 1/8.',
+    answer:true, explain:'Window [4,6] (inclusive) holds {4,5,5,6} = 4 points → 4/(16·2) = 1/8.' },
+  { topic:'density', text:'Discrete kernel, x = 9, h = 3: the estimate is 1/8.',
+    answer:true, explain:'Window [7.5,10.5] holds {8,8,9,9,9,10} = 6 points → 6/(16·3) = 1/8.' },
+  { topic:'density', text:'kNN density, x = 7, k = 1: the estimate is 1/32.',
+    answer:false, explain:'r = 1, but THREE points sit at distance ≤ 1 (6, 8, 8) → k_eff = 3, f = 3/(16·2·1) = 3/32. Forgetting the tie adjustment gives the trap value 1/32.' },
+  { topic:'density', text:'kNN density at x = 7 gives the same estimate for k = 2 as for k = 1.',
+    answer:true, explain:'For k=2 the 2nd NN is also at distance 1, so r = 1 and the same tie set {6,8,8} is counted: both give 3/32.' },
+  { topic:'density', text:'kNN density, x = 7, k = 4: the estimate is 1/8.',
+    answer:true, explain:'4th NN distance r = 2; points within 2: {5,5,6,8,8,9,9,9} = 8 → 8/(16·4) = 1/8.' },
+  { topic:'density', text:'Discrete kernel, x = 13, h = 2: the estimate is 1/8.',
+    answer:false, explain:'Window [12,14] holds {12,13} = 2 points → 2/(16·2) = 1/16, not 1/8.' },
+
+  // ---- outlier (14 pts, 5 items, ±2.8) ----
+  { topic:'outlier', text:'The kNN outlier scores (distance to 2nd NN) of A, B, C and D are all equal to 2.',
+    answer:true, explain:'Each of the four tight points has two neighbours at Manhattan distance 2: e.g. A→B=2, A→C=2. Scores: A=B=C=D=2.' },
+  { topic:'outlier', text:'G, E, A is correctly ordered by kNN outlier score.',
+    answer:true, explain:'Scores: G=5, E=5, A=2. 5 ≥ 5 ≥ 2 — non-strictly decreasing holds (ties are allowed).' },
+  { topic:'outlier', text:'G, F, C is correctly ordered by LOF.',
+    answer:false, explain:'LOF: G ≈ 1.50, F ≈ 2.26, C = 1.0. F > G, so the sequence increases at the second step.' },
+  { topic:'outlier', text:'E, F, A is correctly ordered by kNN outlier score.',
+    answer:false, explain:'Scores: E=5, F=7, A=2. E → F increases (5 &lt; 7), so the ordering is broken.' },
+  { topic:'outlier', text:'F has the highest LOF score of all seven points.',
+    answer:true, explain:'F ≈ 2.26 — its neighbours (E and the cluster edge) sit in much denser surroundings than F itself. Next is G ≈ 1.50.' },
+
+  // ---- ahc (16 pts, 5 items, ±3.2) ----
+  { topic:'ahc', text:'The dendrogram in the figure corresponds exactly to Single-Linkage (topology AND merge heights).',
+    answer:true, explain:'Single-link merges: {1,2}@4, {4,5}@6, 3+{1,2}@min(10,8)=8, root@min(20,18,12,14... over pairs)=12. Exactly the figure.' },
+  { topic:'ahc', text:'Complete-Linkage produces the same merge order (topology) as the figure.',
+    answer:true, explain:'Complete-link: {1,2}@4, {4,5}@6, 3+{1,2}@max(10,8)=10, root@20 — same tree shape, different heights.' },
+  { topic:'ahc', text:'The dendrogram in the figure corresponds exactly to Complete-Linkage.',
+    answer:false, explain:'Topology matches but heights don\'t: complete-link\'s last two merges are at 10 and 20, the figure shows 8 and 12. "Corresponds to" requires the heights too.' },
+  { topic:'ahc', text:'Under Average-Linkage, the third merge (3 joining {1,2}) happens at height 8.5.',
+    answer:false, explain:'Average of d(3,1)=10 and d(3,2)=8 is (10+8)/2 = 9, not 8.5.' },
+  { topic:'ahc', text:'Cutting the Single-Linkage dendrogram at height 7 yields clusters {1,2}, {3}, {4,5}.',
+    answer:true, explain:'At height 7 only the merges @4 ({1,2}) and @6 ({4,5}) have happened; 3 is still a singleton (joins at 8).' },
+
+  // ---- apriori (12 pts, 6 items, ±2) ----
+  { topic:'apriori', text:'At σ = 3 the frequent 1-itemsets are exactly {A}, {B}, {C}, {D}.',
+    answer:true, explain:'Counts: A=4, B=4, C=4, D=5, E=2. E misses the bar of 3.' },
+  { topic:'apriori', text:'From these frequent 1-itemsets, Apriori generates exactly 6 candidate 2-itemsets.',
+    answer:true, explain:'Candidates = ALL pairs of frequent 1-itemsets: C(4,2) = 6. (Counting only the frequent ones after support counting is the classic trap.)' },
+  { topic:'apriori', text:'sup({A,B}) = 3.',
+    answer:false, explain:'{A,B} appears in t1 and t4 only → sup = 2 (so AB is not frequent).' },
+  { topic:'apriori', text:'The candidate 3-itemset {A,B,D} can be pruned without counting its support.',
+    answer:true, explain:'Its 2-subset {A,B} has support 2 &lt; σ — anti-monotonicity licenses the prune immediately.' },
+  { topic:'apriori', text:'Since {A,C}, {A,D} and {C,D} are all frequent, {A,C,D} is guaranteed frequent without counting.',
+    answer:false, explain:'All subsets frequent makes ACD a valid CANDIDATE, never guarantees frequency — support must still be counted. (Here sup(ACD)=3 happens to pass, but that required counting.)' },
+  { topic:'apriori', text:'conf({A,D} ⇒ {C}) = 3/4 and conf({A} ⇒ {C,D}) = 3/4 as well.',
+    answer:true, explain:'sup(ACD)=3 (t2,t4,t6); sup(AD)=4 and sup(A)=4 → both confidences are 3/4. In general conf(A⇒CD) ≤ conf(AD⇒C); equality here because sup(A)=sup(AD).' },
+
+  // ---- dbscan (10 pts, 4 items, ±2.5) ----
+  { topic:'dbscan', text:'With ε = 1, minpts = 3: P7 is a core point, and P6 and P8 are border points.',
+    answer:true, explain:'|N(P7)| = |{P6,P7,P8}| = 3 ≥ 3 → core. P6 and P8 each have |N| = 2 but lie within ε of core P7 → border.' },
+  { topic:'dbscan', text:'With ε = 1, minpts = 3: P5 is noise.',
+    answer:false, explain:'|N(P5)| = |{P4,P5}| = 2 → P5 is not core. But N(P4) = {P3,P4,P5} has size 3 → P4 IS core, and P5 ∈ N(P4) → P5 is a border point, not noise.' },
+  { topic:'dbscan', text:'With ε = 2, minpts = 4: P6, P7 and P8 are all noise.',
+    answer:true, explain:'Each of P6, P7, P8 has neighbourhood {P6,P7,P8} of size 3 &lt; 4 → none is core, and no core point is near them → all noise.' },
+  { topic:'dbscan', text:'With ε = 2, minpts = 4 the data splits into exactly two clusters.',
+    answer:false, explain:'Only one cluster forms: cores P2,P3,P4 plus borders P1,P5. The right-hand group is entirely noise (see previous item) — noise is not a cluster.' },
+
+  // ---- gmm (10 pts, 5 items, ±2) ----
+  { topic:'gmm', text:'The M-step prior updates are π₁ = 2.7/5 and π₂ = 2.3/5.',
+    answer:true, explain:'Σγ₁ = 0.9+0.8+0.2+0.1+0.7 = 2.7, Σγ₂ = 2.3, n = 5. π_k = Σγ_k / n.' },
+  { topic:'gmm', text:'The M-step mean updates are μ₁ = 13.4/2.7 and μ₂ = 6.6/2.3.',
+    answer:false, explain:'Numerators swapped — the exam\'s favourite distractor. Σγ₁x = 6.6 and Σγ₂x = 13.4, so μ₁ = 6.6/2.7 ≈ 2.44 and μ₂ = 13.4/2.3 ≈ 5.83.' },
+  { topic:'gmm', text:'A hard partition of the data can be obtained from the posteriors alone, assigning each point to argmax_k γ_k — no other quantities needed.',
+    answer:true, explain:'MAP assignment uses only the posteriors, which are given. This burned 2.5 pts in June — it is TRUE.' },
+  { topic:'gmm', text:'A 1-D Gaussian mixture with 3 components has 9 free parameters.',
+    answer:false, explain:'3 means + 3 variances + 2 free priors (they sum to 1) = 8, not 9.' },
+  { topic:'gmm', text:'During the M-step the responsibilities are held fixed while the parameters (π, μ, σ²) are re-estimated.',
+    answer:true, explain:'E-step: fix parameters, update responsibilities. M-step: fix responsibilities, update parameters.' },
+
+  // ---- kmeans (14 pts, 5 items, ±2.8) ----
+  { topic:'kmeans', text:'Initializing with centroids (1, 2, 3), k-means converges to the partition {A}, {B,C}, {D,E,F,G,H}.',
+    answer:true, explain:'Iter 1: {A},{B},{C..H} → centroids (1, 2, 10.17). Iter 2: {A},{B,C},{D..H} → (1, 2.5, 11.6). Iter 3: unchanged — converged.' },
+  { topic:'kmeans', text:'That converged partition attains the global minimum of the SSE.',
+    answer:false, explain:'Its SSE ≈ 53.7. The natural partition {A,B,C},{D,E,F},{G,H} has SSE = 4.5 — the run is trapped in a local minimum.' },
+  { topic:'kmeans', text:'{A}, {B,C}, {D,E,F,G,H} is a fixed point of k-means: the reassignment step changes nothing.',
+    answer:true, explain:'Centroids (1, 2.5, 11.6): every point is already nearest its own centroid (e.g. B: |2−2.5| = 0.5 &lt; |2−1| = 1). Stable — that\'s exactly why the algorithm stops there.' },
+  { topic:'kmeans', text:'The SSE of the partition {A,B,C}, {D,E,F}, {G,H} equals 5.0.',
+    answer:false, explain:'Centroids 2, 9, 15.5. SSE = (1+0+1) + (1+0+1) + (0.25+0.25) = 4.5, not 5.0.' },
+  { topic:'kmeans', text:'The simplified silhouette of A is higher in {A}, {B,C}, {D,E,F,G,H} than in {A,B,C}, {D,E,F}, {G,H}.',
+    answer:true, explain:'As a singleton, A sits ON its centroid: a = 0 → s(A) = 1. In the natural partition a = 1, b = 8 → s(A) = 7/8 = 0.875. Singleton silhouettes are deceptively perfect.' },
+
+  // ---- similarity (10 pts, 4 items, ±2.5) ----
+  { topic:'similarity', text:'With Σ = 2I, the Mahalanobis distance of every point to the mean equals its Euclidean distance divided by √2.',
+    answer:true, explain:'Σ⁻¹ = I/2, so d_M = √(dᵀd/2) = d_E/√2 for all points. (Equality with Euclidean itself requires Σ = I.)' },
+  { topic:'similarity', text:'For binary vectors, Jaccard similarity is always greater than or equal to SMC.',
+    answer:false, explain:'The opposite: SMC adds f₀₀ to numerator and denominator, pulling the value toward 1, so SMC ≥ Jaccard — equal only when f₀₀ = 0 (or both are 1).' },
+  { topic:'similarity', text:'The Minkowski distance with p = 1 is the Euclidean distance.',
+    answer:false, explain:'p = 1 is Manhattan; p = 2 is Euclidean; p → ∞ is the supremum (Chebyshev) distance.' },
+  { topic:'similarity', text:'The cosine similarity of two one-hot-encoded objects that share no 1-positions is 0, no matter how many shared 0-columns are appended.',
+    answer:true, explain:'Cosine is a normalized dot product; 0-0 positions contribute nothing to either the dot product or the norms.' },
+];
+
+const STORAGE_KEY = 'dm583sim.v1';
+const root = document.getElementById('root');
+const sections = {};
+document.querySelectorAll('section.topic').forEach(s => sections[s.dataset.topic] = s);
+const topicMeta = {};
+document.querySelectorAll('section.topic').forEach(s => {
+  const items = QUESTIONS.filter(q => q.topic === s.dataset.topic).length;
+  topicMeta[s.dataset.topic] = {
+    pts: parseFloat(s.dataset.pts),
+    per: parseFloat(s.dataset.pts) / items,
+    name: s.querySelector('h2').textContent,
+  };
+});
+
+QUESTIONS.forEach((q, i) => {
+  const div = document.createElement('div');
+  div.className = 'q';
+  div.dataset.index = i;
+  div.innerHTML = `
+    <div class="q-text"><span>${q.text}</span><span class="delta"></span>
+      <div class="explain"></div></div>
+    <div class="btns">
+      <div class="b" data-v="true">TRUE</div>
+      <div class="b" data-v="false">FALSE</div>
+      <div class="b" data-v="blank">BLANK</div>
+    </div>`;
+  sections[q.topic].appendChild(div);
+});
+
+let answers = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') ?? new Array(QUESTIONS.length).fill(null);
+if (answers.length !== QUESTIONS.length) answers = new Array(QUESTIONS.length).fill(null);
+let checked = false;
+
+function paintSelections(){
+  document.querySelectorAll('.q').forEach(qDiv => {
+    const v = answers[+qDiv.dataset.index];
+    qDiv.querySelectorAll('.b').forEach(b => {
+      b.classList.toggle('sel', v !== null && String(v) === b.dataset.v);
+    });
+  });
+}
+paintSelections();
+
+root.addEventListener('click', e => {
+  const b = e.target.closest('.b');
+  if (!b || checked) return;
+  const qDiv = b.closest('.q');
+  const i = +qDiv.dataset.index;
+  const v = b.dataset.v === 'blank' ? 'blank' : b.dataset.v === 'true';
+  answers[i] = (answers[i] === v) ? null : v;   // click again to unselect
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+  paintSelections();
+  progress();
+});
+
+function progress(){
+  const done = answers.filter(a => a !== null).length;
+  document.getElementById('fill').style.width = (done / QUESTIONS.length * 100) + '%';
+  if (!checked) document.getElementById('readout').innerHTML =
+    `<strong>${done}</strong> / ${QUESTIONS.length} decided`;
+}
+progress();
+
+const fmt = x => (Math.round(x * 10) / 10).toString();
+
+document.getElementById('checkBtn').addEventListener('click', () => {
+  if (checked) return;
+  const undecided = answers.filter(a => a === null).length;
+  if (undecided > 0 && !confirm(`${undecided} item(s) undecided — they will count as BLANK. Grade now?`)) return;
+  checked = true;
+
+  let total = 0, max = 0, nOk = 0, nBad = 0, nBlank = 0, lost = 0;
+  const perTopic = {};
+  for (const t in topicMeta) perTopic[t] = { score: 0, ok: 0, bad: 0, blank: 0 };
+
+  document.querySelectorAll('.q').forEach(qDiv => {
+    const i = +qDiv.dataset.index;
+    const q = QUESTIONS[i];
+    const per = topicMeta[q.topic].per;
+    max += per;
+    const v = answers[i];
+    let d = 0, cls;
+    if (v === null || v === 'blank') { cls = 'skip'; nBlank++; perTopic[q.topic].blank++; }
+    else if (v === q.answer) { d = per; cls = 'ok'; nOk++; perTopic[q.topic].ok++; }
+    else { d = -per; cls = 'bad'; nBad++; lost += per; perTopic[q.topic].bad++; }
+    total += d;
+    perTopic[q.topic].score += d;
+
+    qDiv.classList.add('revealed', cls);
+    qDiv.querySelector('.explain').textContent = q.explain;
+    qDiv.querySelector('.delta').textContent =
+      cls === 'skip' ? '±0' : (d > 0 ? `+${fmt(d)}` : `−${fmt(-d)}`);
+    qDiv.querySelectorAll('.b').forEach(b => {
+      if (b.dataset.v === String(q.answer)) b.classList.add('truth');
+    });
+  });
+
+  const pct = total / max * 100;
+  document.getElementById('scoreBig').textContent = `${fmt(total)} / ${fmt(max)}  (${fmt(pct)}%)`;
+  const v = document.getElementById('verdict');
+  const pass = pct >= 50;
+  v.textContent = pass ? 'PASS at the ~50% bar.' : 'Below the ~50% bar.';
+  v.className = 'verdict ' + (pass ? 'pass' : 'fail');
+
+  let rows = '<table><tr><th>Topic</th><th>✓</th><th>✗</th><th>—</th><th>Score</th><th>of</th></tr>';
+  for (const t in topicMeta) {
+    const r = perTopic[t];
+    rows += `<tr><td>${topicMeta[t].name}</td><td>${r.ok}</td><td>${r.bad}</td><td>${r.blank}</td>
+             <td>${fmt(r.score)}</td><td>${fmt(topicMeta[t].pts)}</td></tr>`;
+  }
+  rows += '</table>';
+  document.getElementById('breakdown').innerHTML = rows;
+
+  const cf = document.getElementById('counterfactual');
+  if (nBad > 0) {
+    cf.style.display = '';
+    cf.innerHTML = `Wrong answers cost you <strong>−${fmt(lost)}</strong> pts. Had you BLANKED those ${nBad} item(s) instead, your score would be <strong>${fmt(total + lost)} / ${fmt(max)}</strong> (${fmt((total + lost) / max * 100)}%). June lesson: only answer what you computed.`;
+  } else {
+    cf.style.display = '';
+    cf.innerHTML = `Zero wrong answers — perfect calibration. ${nBlank > 0 ? `Now work on converting the ${nBlank} blank(s) into computed answers.` : 'Nothing left to blank.'}`;
+  }
+
+  document.getElementById('readout').innerHTML =
+    `<strong>${fmt(total)} / ${fmt(max)}</strong> · ${nOk}✓ ${nBad}✗ ${nBlank}—`;
+  document.getElementById('fill').style.width = '100%';
+  document.getElementById('report').classList.add('show');
+  document.getElementById('report').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('checkBtn').disabled = true;
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  checked = false;
+  answers = new Array(QUESTIONS.length).fill(null);
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('.q').forEach(qDiv => {
+    qDiv.classList.remove('revealed', 'ok', 'bad', 'skip');
+    qDiv.querySelector('.delta').textContent = '';
+    qDiv.querySelectorAll('.b').forEach(b => b.classList.remove('sel', 'truth'));
+  });
+  document.getElementById('report').classList.remove('show');
+  document.getElementById('checkBtn').disabled = false;
+  progress();
+});
+</script>
+
+</body>
+</html>

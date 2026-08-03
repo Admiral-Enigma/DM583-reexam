@@ -63,6 +63,27 @@ def mstep1d(xs: Vector, gamma, verbose: bool = True) -> tuple[list, list, list]:
       print(f"  var     = Sum(g*(x-mu)^2)/Sum(g) = {num_v:.6g}/{Ni:.6g} = {v:.6g}")
   return mus, vs, prs
 
+def hard_partition(gamma: Matrix, labels=None, verbose: bool = True) -> list[int]:
+  """
+  MAP hard partition from posteriors alone: point j -> argmax_i gamma[j][i]
+  (1-based component ids). The exam point: the posteriors SUFFICE — no other
+  quantities needed (June Q7.3).
+  """
+  out = [max(range(len(row)), key=lambda i: row[i]) + 1 for row in gamma]
+  if verbose:
+    print("hard partition (argmax posterior — posteriors alone suffice):")
+    for j, (row, c) in enumerate(zip(gamma, out)):
+      name = labels[j] if labels else f"x{j+1}"
+      print(f"  {name}: gammas {list(row)} -> C{c}")
+  return out
+
+def check_claim(name: str, computed: float, claimed: float, tol: float = 1e-4) -> bool:
+  "Compare a computed quantity against an exam statement's claimed value."
+  ok = abs(float(computed) - float(claimed)) < tol
+  print(f"  claim '{name}': claimed {float(claimed):.4f}, "
+        f"computed {float(computed):.4f} -> {'TRUE' if ok else 'FALSE'}")
+  return ok
+
 def param_count(k: int, d: int = 1, cov: str = "full") -> int:
   """
   Number of free parameters of a d-dim GMM with k components; prints the

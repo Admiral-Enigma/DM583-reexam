@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DM583 June 2026 Exam — Retake Simulator</title>
+<style>
+  :root{
+    --bg:#F4F4F0; --card:#FFFFFF; --ink:#1A1E28; --soft:#5A6172;
+    --line:#DDDDD4; --accent:#2B4C7E;
+    --good:#2E6B4F; --good-bg:#E2F0E8;
+    --bad:#A63A2E; --bad-bg:#F6E2DE;
+    --blank:#8A7B4F; --blank-bg:#F1ECDB;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size:15px; line-height:1.55; padding-bottom:110px;}
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px;}
+  header{padding:40px 0 18px 0; border-bottom:3px solid var(--ink);}
+  header .kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--soft); font-family:ui-monospace, Menlo, monospace;}
+  h1{font-size:30px; margin:6px 0 8px 0;}
+  header p{margin:0; color:var(--soft); max-width:660px;}
+  header p strong{color:var(--ink);}
+
+  .scorebar{position:sticky; top:0; z-index:20; background:rgba(244,244,240,.94); backdrop-filter:blur(4px); border-bottom:1px solid var(--line); padding:9px 0;}
+  .scorebar-inner{max-width:860px; margin:0 auto; padding:0 24px; display:flex; gap:16px; align-items:center;}
+  .track{flex:1; height:7px; background:var(--line); border-radius:8px; overflow:hidden;}
+  .fill{height:100%; width:0%; background:var(--accent); transition:width .2s;}
+  .readout{font-family:ui-monospace, Menlo, monospace; font-size:13px; color:var(--soft); white-space:nowrap;}
+  .readout strong{color:var(--ink);}
+
+  section.topic{margin:30px 0; background:var(--card); border:1px solid var(--line); border-radius:4px;}
+  .t-head{display:flex; justify-content:space-between; align-items:baseline; padding:14px 20px; border-bottom:1px solid var(--line);}
+  .t-head h2{font-size:18px; margin:0;}
+  .t-head .pts{font-family:ui-monospace, Menlo, monospace; font-size:12px; color:var(--soft);}
+  .setup{padding:12px 20px; background:#F7F5EC; border-bottom:1px solid var(--line); font-size:13.5px; color:#4d4630;}
+  .setup code, .setup pre{font-family:ui-monospace, Menlo, monospace; font-size:12.5px;}
+  .setup pre{margin:6px 0; overflow-x:auto;}
+  .setup svg{background:#fff; border:1px solid var(--line); margin-top:8px; max-width:100%;}
+
+  .q{display:flex; gap:16px; align-items:flex-start; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .q:last-child{border-bottom:none;}
+  .q-text{flex:1; font-size:14.5px;}
+  .q-text .delta{font-family:ui-monospace, Menlo, monospace; font-size:12px; margin-left:6px;}
+  .june-note{display:none; font-family:ui-monospace, Menlo, monospace; font-size:12px; margin-top:6px; color:var(--soft);}
+  .q.revealed .june-note{display:block;}
+  .explain{display:none; margin-top:9px; padding:8px 12px; font-size:13px; border-left:3px solid var(--soft); background:#F4F5F2; color:var(--soft);}
+  .q.revealed .explain{display:block;}
+
+  .btns{display:flex; gap:7px; flex-shrink:0;}
+  .b{min-width:54px; padding:7px 8px; text-align:center; font-family:ui-monospace, Menlo, monospace; font-size:12px; font-weight:600; border:1.5px solid var(--ink); background:var(--card); border-radius:18px; cursor:pointer; user-select:none;}
+  .b:hover{background:#EEEEE8;}
+  .b.sel{background:var(--ink); color:#fff;}
+  .b[data-v="blank"]{border-style:dashed; color:var(--soft); border-color:var(--soft);}
+  .b[data-v="blank"].sel{background:var(--blank); border-color:var(--blank); color:#fff;}
+  .q.revealed .b{cursor:default;}
+
+  .q.revealed.ok{background:var(--good-bg);}
+  .q.revealed.ok .b.sel{background:var(--good); border-color:var(--good); color:#fff;}
+  .q.revealed.bad{background:var(--bad-bg);}
+  .q.revealed.bad .b.sel{background:var(--bad); border-color:var(--bad); color:#fff;}
+  .q.revealed.skip{background:var(--blank-bg);}
+  .q.revealed .b.truth{box-shadow:0 0 0 2px var(--good) inset; border-color:var(--good);}
+  .q.revealed.ok .delta{color:var(--good);}
+  .q.revealed.bad .delta{color:var(--bad);}
+  .q.revealed.skip .delta{color:var(--blank);}
+
+  .report{display:none; margin:30px 0; border:2px solid var(--ink); background:var(--card); padding:22px 26px;}
+  .report.show{display:block;}
+  .report .big{font-size:34px; font-weight:700; font-family:ui-monospace, Menlo, monospace;}
+  .report .verdict{font-size:15px; margin-top:2px;}
+  .report .verdict.pass{color:var(--good); font-weight:600;}
+  .report .verdict.fail{color:var(--bad); font-weight:600;}
+  .report table{border-collapse:collapse; margin-top:14px; width:100%; font-size:13.5px;}
+  .report th, .report td{border:1px solid var(--line); padding:6px 10px; text-align:right;}
+  .report th:first-child, .report td:first-child{text-align:left;}
+  .report th{background:#F0F0EA; font-weight:600;}
+  .counterfactual{margin-top:14px; padding:11px 14px; background:var(--blank-bg); border-left:4px solid var(--blank); font-size:14px;}
+  .junebox{margin-top:14px; padding:11px 14px; background:#E8ECF3; border-left:4px solid var(--accent); font-size:14px;}
+  .counterfactual strong, .junebox strong{font-family:ui-monospace, Menlo, monospace;}
+
+  .controls{position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:2px solid var(--ink); padding:13px 24px; display:flex; justify-content:center; gap:12px; z-index:30;}
+  .btn{font-weight:600; font-size:14px; padding:10px 24px; border-radius:22px; border:1.5px solid var(--ink); cursor:pointer; background:var(--ink); color:#fff;}
+  .btn.sec{background:transparent; color:var(--ink);}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  footer{text-align:center; color:var(--soft); font-size:12px; margin-top:36px; font-family:ui-monospace, Menlo, monospace;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">DM583 · Data Mining · June 2026 Retake</div>
+    <h1>The Failed Exam — Exact Replay</h1>
+    <p>The 9 questions and 38 sub-questions of June 2026, with the original point weights:
+       correct <strong>+p/n</strong>, wrong <strong>−p/n</strong>, blank <strong>0</strong>, 100 pts total, pass ≈ 50.
+       June result: <strong>21.2</strong>. Dry-run target: <strong>≥ 80 with zero wrong answers</strong>.
+       Use the toolkit (<code>uv run python</code> → <code>from exam import *</code>) — answer only what you computed.</p>
+  </header>
+</div>
+
+<div class="scorebar">
+  <div class="scorebar-inner">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="readout" id="readout">0 / 0 decided</div>
+  </div>
+</div>
+
+<div class="wrap" id="root">
+
+  <section class="topic" data-topic="q1" data-pts="12" data-labels="tf">
+    <div class="t-head"><h2>Q1 · Non-Parametric Density Estimation</h2><span class="pts">12 pts · ±3 each</span></div>
+    <div class="setup">
+      Unidimensional dataset with 20 observations of a numeric variable x:<br>
+      <code>{1, 1, 2, 2, 3, 4, 4, 4, 5, 5, 5, 5, 6, 9, 9, 10, 10, 10, 10, 11}</code><br>
+      Which statements about non-parametric density estimates are correct, assuming Euclidean distance?
+      <em>Hint: the volume of a ball in 1 dimension is 2 times its radius.</em>
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q2" data-pts="14" data-labels="yn">
+    <div class="t-head"><h2>Q2 · Outlier Orderings (kNN / LOF)</h2><span class="pts">14 pts · ±3.5 each</span></div>
+    <div class="setup">
+      Manhattan distance. Query point does <em>not</em> count to its own neighborhood.
+      A subset is "correctly ordered" when the top outlier is listed first and later points follow
+      with (not strictly) decreasing outlier score. Which subsets are correctly ordered w.r.t. the
+      given method and parameter?
+      <div id="grid-q2"></div>
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q3" data-pts="10" data-labels="tf">
+    <div class="t-head"><h2>Q3 · Similarity &amp; Dissimilarity Measures</h2><span class="pts">10 pts · ±2.5 each</span></div>
+    <div class="setup">
+      Tabular data: N data objects (rows) by n variables (columns). Which statements about measuring
+      (dis)similarity between pairs of objects are correct?
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q4" data-pts="16" data-labels="tf">
+    <div class="t-head"><h2>Q4 · AHC &amp; Dendrogram</h2><span class="pts">16 pts · ±3.2 each</span></div>
+    <div class="setup">
+      AHC on five observations with pairwise distances:
+      <pre>D = [ 0   2  14  22  18
+      2   0  10  18  16
+     14  10   0   8  10
+     22  18   8   0   6
+     18  16  10   6   0 ]</pre>
+      The dendrogram below has non-singleton cluster nodes precisely at levels 2, 6, 8, 10 of its scale.
+      "Dendrogram" always refers to <em>both</em> the tree structure (topology) and its vertical scale.
+      <div id="dendro-q4"></div>
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q5" data-pts="4" data-labels="yn">
+    <div class="t-head"><h2>Q5 · Apriori — Candidate Pruning</h2><span class="pts">4 pts · ±1 each</span></div>
+    <div class="setup">
+      Frequent 3-itemsets:
+      <code>(A,B,C), (A,B,D), (A,B,E), (A,B,F), (A,E,F), (B,C,D), (B,C,E), (B,D,F), (B,E,F), (C,E,F)</code>.<br>
+      Which of the following 4-itemset <em>candidates</em> can be pruned without computing their support?
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q6" data-pts="10" data-labels="tf">
+    <div class="t-head"><h2>Q6 · DBSCAN</h2><span class="pts">10 pts · ±2.5 each</span></div>
+    <div class="setup">
+      Manhattan distance. The query object <em>counts</em> as a member of its own neighborhood.
+      Which statements are correct?
+      <div id="grid-q6"></div>
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q7" data-pts="10" data-labels="tf">
+    <div class="t-head"><h2>Q7 · EM-GMM</h2><span class="pts">10 pts · ±2.5 each</span></div>
+    <div class="setup">
+      Six observations of a real-valued variable x, with posterior probability estimates that each
+      observation was produced by mixture component C&#8321; or C&#8322;:
+      <pre> x   P(C1|x)  P(C2|x)
+ 2     0.9      0.1
+ 3     0.8      0.2
+ 7     0.3      0.7
+ 9     0.1      0.9
+ 2     0.9      0.1
+ 1     0.8      0.2</pre>
+      Model: mixture of two univariate Gaussians. Which statements about EM-GMM are correct?
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q8" data-pts="10" data-labels="yn">
+    <div class="t-head"><h2>Q8 · Apriori &amp; Association Rules</h2><span class="pts">10 pts · ±2 each</span></div>
+    <div class="setup">
+      Items I = {A, B, C, D, E, F, G}, database T:
+      <pre> 1: A B C D      5: B C G
+ 2: A C D F      6: D F G
+ 3: A C D E G    7: A B G
+ 4: A B D F      8: C D F G</pre>
+      Which statements are correct?
+    </div>
+  </section>
+
+  <section class="topic" data-topic="q9" data-pts="14" data-labels="tf">
+    <div class="t-head"><h2>Q9 · k-Means</h2><span class="pts">14 pts · ±3.5 each</span></div>
+    <div class="setup">
+      Nine 1-D observations, k = 3:<br>
+      <code>A=2 &nbsp;B=4 &nbsp;C=10 &nbsp;D=12 &nbsp;E=3 &nbsp;F=20 &nbsp;G=28 &nbsp;H=13 &nbsp;I=25</code><br>
+      Which statements are correct?
+    </div>
+  </section>
+
+  <div class="report" id="report">
+    <div class="big" id="scoreBig">—</div>
+    <div class="verdict" id="verdict"></div>
+    <div id="breakdown"></div>
+    <div class="junebox" id="junebox"></div>
+    <div class="counterfactual" id="counterfactual"></div>
+  </div>
+
+  <footer>exact replay of the June 2026 attempt · truths verified by the exam package (src/exam) · fresh-question drill: simulator.html</footer>
+</div>
+
+<div class="controls">
+  <button class="btn sec" id="resetBtn">Reset</button>
+  <button class="btn" id="checkBtn">Grade Like The Exam</button>
+</div>
+
+<script>
+// answer: ground truth (true/false). june: your June 2026 answer (true/false/null = blank).
+const QUESTIONS = [
+  // ---- Q1 density (±3) ----
+  { topic:'q1', june:false,
+    text:'Density estimated at x = 4, according to the Discrete Kernel estimator with window width h = 1, is 1/10.',
+    answer:false, explain:'Window [3.5, 4.5] holds the three 4s → 3/(20·1) = 3/20, not 1/10. (tool: discrete_kernel(data, 4, 1))' },
+  { topic:'q1', june:true,
+    text:'Density estimated at x = 7, according to the KNN density estimator with k = 2 (adjustable in case of ties), is 3/80.',
+    answer:false, explain:'r = 2, but SEVEN points sit at distance ≤ 2 ({5,5,5,5,6,9,9}) → k_eff = 7, f = 7/(20·4) = 7/80. The claim 3/80 ignores the tie adjustment the question itself announces.' },
+  { topic:'q1', june:false,
+    text:'Density estimated at x = 7, according to the KNN density estimator with k = 1 (adjustable in case of ties), is 1/40.',
+    answer:true, explain:'1-NN is 6 at distance 1, no ties → f = 1/(20·2) = 1/40. TRUE.' },
+  { topic:'q1', june:false,
+    text:'Density estimated at x = 4, according to the Discrete Kernel estimator with window width h = 2, is 1/5.',
+    answer:true, explain:'Window [3, 5] inclusive holds {3, 4,4,4, 5,5,5,5} = 8 points → 8/(20·2) = 1/5. TRUE.' },
+
+  // ---- Q2 outliers (±3.5) ----
+  { topic:'q2', june:false,
+    text:'C, D, E &nbsp;w.r.t. kNN (k = 2).',
+    answer:true, explain:'kNN scores (dist to 2nd NN): C=3, D=2, E=1. 3 ≥ 2 ≥ 1 — correctly ordered. (tool: res = analyze(pts, "man", k=2); check_order("C,D,E", res["knn"]))' },
+  { topic:'q2', june:true,
+    text:'A, B, C &nbsp;w.r.t. LOF (k = 2).',
+    answer:false, explain:'LOF: A=35/24≈1.458, B=1.25, C=11/7≈1.571. C is the LARGEST but listed last → not ordered.' },
+  { topic:'q2', june:false,
+    text:'A, C, D &nbsp;w.r.t. LOF (k = 2).',
+    answer:false, explain:'A≈1.458 &lt; C≈1.571 — breaks at the first step already.' },
+  { topic:'q2', june:false,
+    text:'A, B, D &nbsp;w.r.t. kNN (k = 2).',
+    answer:true, explain:'kNN scores: A=4, B=3, D=2. 4 ≥ 3 ≥ 2 — correctly ordered.' },
+
+  // ---- Q3 similarity (±2.5) ----
+  { topic:'q3', june:true,
+    text:'If the data are points on the R² plane with mean x&#772; and covariance matrix Σ = [[1, 2], [2, 1]], then the distance between an arbitrary data point and the mean x&#772; is necessarily the same according to both the Mahalanobis and the Euclidean distances.',
+    answer:false, explain:'Equality needs Σ = I. This Σ isn\'t even positive semi-definite (eigenvalues 3 and −1). FALSE.' },
+  { topic:'q3', june:true,
+    text:'If the data objects are entirely described by non-binary nominal categorical variables, none of which is treated as asymmetric, then the similarity between any pair according to Simple Matching and Jaccard coefficients is necessarily the same, because there are no matches to be discarded by Jaccard once all variables are treated as symmetric.',
+    answer:true, explain:'No "absence" state → nothing for Jaccard to discard → both reduce to matches/n. TRUE.' },
+  { topic:'q3', june:false,
+    text:'If the data objects are described by nominal categorical variables transformed via one-hot encoding, the cosine similarity will never be a suitable choice as it will inevitably be dominated by 0-0 matches.',
+    answer:false, explain:'Backwards — cosine IGNORES 0-0 positions (they add nothing to dot product or norms). FALSE.' },
+  { topic:'q3', june:true,
+    text:'If the data are points on the R² plane with mean at the origin and covariance matrix Σ = [[1, 0], [0, 1]], then the distance between the mean and a data point lying on the horizontal or vertical axis is the same according to any of: Mahalanobis, Euclidean, Manhattan, and Suprema.',
+    answer:true, explain:'With Σ = I and one zero coordinate, all four reduce to |x₁|. TRUE.' },
+
+  // ---- Q4 AHC (±3.2) ----
+  { topic:'q4', june:true,
+    text:'The dendrogram produced by Complete-Linkage applied to D is only the same as the dendrogram in the figure with respect to topology (hierarchical structure), but not with respect to the scale.',
+    answer:true, explain:'Complete: merges @2, 6, 10, 22 — same tree shape, heights differ from the figure\'s 2, 6, 8, 10. TRUE.' },
+  { topic:'q4', june:true,
+    text:'After the second AHC iteration there are three clusters C_A, C_B, C_C with computed inter-cluster distances. Based only on these three values, Single- and Complete-Linkage can compute the next iteration; Average-Linkage, however, would require further information about the current clusters to proceed.',
+    answer:true, explain:'Single/complete need only min/max of the three numbers; average needs the cluster SIZES for the Lance–Williams weighted update. TRUE.' },
+  { topic:'q4', june:false,
+    text:'The dendrogram in the figure fully corresponds to the one produced by applying the Single-Linkage algorithm to distance matrix D.',
+    answer:true, explain:'Single: {1,2}@2, {4,5}@6, 3+{4,5}@8, root@10 — EXACT match, topology and scale. TRUE. (tool: match_dendrogram(D, [2,6,8,10]))' },
+  { topic:'q4', june:true,
+    text:'The dendrogram in the figure corresponds to the one produced by applying the Average-Linkage algorithm to distance matrix D.',
+    answer:false, explain:'Average: @2, 6, 9, 16.33 — heights 9 and 16.33 ≠ 8 and 10. FALSE. (June: subs 3+4 answered as an inverted pair — both wrong, −6.4.)' },
+  { topic:'q4', june:false,
+    text:'A horizontal cut through the dendrogram in the figure at level 4 of its scale would partition the data into the three clusters {1,2}, {3}, {4,5}.',
+    answer:false, explain:'At level 4 only the @2 merge has happened: {1,2}, {3}, {4}, {5} — four clusters, not three ({4,5} merges at 6 &gt; 4). FALSE.' },
+
+  // ---- Q5 apriori pruning (±1) ----
+  { topic:'q5', june:true,
+    text:'(A,B,C,E)',
+    answer:true, explain:'3-subset ACE is not frequent → prunable. YES. (tool: prunable(cand, frequent_3sets))' },
+  { topic:'q5', june:false,
+    text:'(B,C,D,E)',
+    answer:true, explain:'BDE and CDE are both missing from the frequent list → prunable. YES.' },
+  { topic:'q5', june:false,
+    text:'(A,B,E,F)',
+    answer:false, explain:'All four 3-subsets (ABE, ABF, AEF, BEF) are frequent → NOT prunable; support must be counted. NO.' },
+  { topic:'q5', june:true,
+    text:'(A,B,D,E)',
+    answer:true, explain:'ADE and BDE missing → prunable. YES.' },
+
+  // ---- Q6 DBSCAN (±2.5) ----
+  { topic:'q6', june:true,
+    text:'S is border point with ε = 2 and MinPts = 6.',
+    answer:true, explain:'|N(S)| = 2 (S, Q) → not core; but Q is core (|N(Q)| = 6: Q,R,N,O,J,S) and S ∈ N(Q) → border. TRUE.' },
+  { topic:'q6', june:false,
+    text:'P will be part of the same cluster as M with ε = 2 and MinPts = 4.',
+    answer:false, explain:'P is not core (|N(P)| = 2) and its only neighbor M is not core either (M is border via G) → P is noise. FALSE.' },
+  { topic:'q6', june:false,
+    text:'P is noise point with ε = 2 and MinPts = 2.',
+    answer:false, explain:'|N(P)| = 2 ≥ MinPts (P counts itself + M) → P is CORE, not noise. FALSE.' },
+  { topic:'q6', june:true,
+    text:'G is core point with ε = 2 and MinPts = 6.',
+    answer:true, explain:'N(G) = {G, M, C, E, F, H} = 6 ≥ 6 → core. TRUE.' },
+
+  // ---- Q7 GMM (±2.5) ----
+  { topic:'q7', june:true,
+    text:'Starting from the posteriors in the table, the next (M) step of EM would estimate the prior probabilities of C&#8321; and C&#8322; as 3.8/6 ≈ 0.633 and 2.2/6 ≈ 0.366, respectively.',
+    answer:true, explain:'Σγ₁ = 3.8, Σγ₂ = 2.2, n = 6 → π = Σγ/n. TRUE. (tool: mstep1d(xs, gammas))' },
+  { topic:'q7', june:false,
+    text:'Starting from the posteriors in the table, the next (M) step of EM would update the means of C&#8321; and C&#8322; as 14.2/3.8 ≈ 3.73 and 9.8/2.2 ≈ 4.45, respectively.',
+    answer:false, explain:'Numerators swapped: Σγ₁x = 9.8 and Σγ₂x = 14.2, so μ₁ = 9.8/3.8 ≈ 2.58 and μ₂ = 14.2/2.2 ≈ 6.45. FALSE.' },
+  { topic:'q7', june:false,
+    text:'To obtain a hard (non-overlapping) partition of the dataset from the EM-GMM result, all that is needed are the final posterior probability estimates P(C&#8321;|x) and P(C&#8322;|x) for all x values.',
+    answer:true, explain:'Assign each x to argmax posterior — the posteriors alone suffice. TRUE (cost 2.5 in June).' },
+  { topic:'q7', june:true,
+    text:'For this univariate dataset, the GMM model is described by the means and variances of the Gaussian components as well as by their prior probabilities. This amounts to a total of 3 numerical coefficients that can uniquely describe the model.',
+    answer:false, explain:'2 means + 2 variances + 1 free prior (π₂ = 1−π₁) = 5, not 3. FALSE. (tool: param_count(2))' },
+
+  // ---- Q8 apriori rules (±2) ----
+  { topic:'q8', june:true,
+    text:'If a candidate rule {A,D} ⇒ {C} has confidence below the minimum confidence threshold, then we can be certain, without computing it, that the rule {A} ⇒ {C,D} will also have confidence below the threshold.',
+    answer:true, explain:'Same numerator supp(ACD); supp(A) ≥ supp(AD) → conf(A⇒CD) ≤ conf(AD⇒C). YES.' },
+  { topic:'q8', june:false,
+    text:'For minimum support σ = 3, there are more than one frequent 3-itemsets in T, and these include (A,C,D).',
+    answer:false, explain:'ACD (support 3) is the ONLY frequent 3-itemset. NO. (tool: apriori(parse_db(...), 3))' },
+  { topic:'q8', june:null,
+    text:'For σ = 3, the complete list of all possible 2-itemset candidates produced by Apriori by merging frequent 1-itemsets is (A,B), (A,C), (A,D), (C,D), (C,G), (D,F), (D,G) — and all of these happen to be frequent in T.',
+    answer:false, explain:'Candidates = ALL pairs of the 6 frequent items: C(6,2) = 15. The 7 listed are the ones frequent AFTER counting — that\'s the frequent set, not the candidate set. NO. (June: blanked — correctly, per the rules.)' },
+  { topic:'q8', june:true,
+    text:'For a given σ, if every 2-itemset involving only items C, D and G — (C,D), (C,G), (D,G) — happens to be frequent, then the 3-itemset candidate (C,D,G) is guaranteed to be frequent as well.',
+    answer:false, explain:'Converse of anti-monotonicity — invalid. Here supp(CDG) = 2 &lt; 3 even though all its pairs are frequent. NO.' },
+  { topic:'q8', june:false,
+    text:'The support of the candidate rule {A,D} ⇒ {C} is 3 and its confidence is 3/4.',
+    answer:true, explain:'ACD ⊆ t1 (ABCD), t2 (ACDF), t3 (ACDEG) → supp(ACD) = 3. supp(AD) = 4 → conf = 3/4. Rule support = supp(antecedent ∪ consequent) = 3. YES. (tool: rule(db, "AD", "C"))' },
+
+  // ---- Q9 k-means (±3.5) ----
+  { topic:'q9', june:true,
+    text:'If we pick the initial prototypes as 2, 4.5 and 6, the algorithm converges in exactly three iterations (complete assign-then-update cycles), after which clusters and prototypes no longer change. The final clusters will be {A,B,E}, {C,D,H}, {F,G,I}.',
+    answer:true, explain:'Trace: {A,E}{B}{rest} → {A,E}{B,C}{rest} → {A,B,E}{C,D,H}{F,G,I}; iteration 4 confirms no change. TRUE. (tool: kmeans_trace(data, [2, 4.5, 6]))' },
+  { topic:'q9', june:true,
+    text:'If k-Means is randomly initialized in a way that it eventually reaches the partition {A,B,E}, {C,D,H,F}, {G,I}, then it gets trapped and cannot escape this local minimum, despite a better solution existing according to the algorithm\'s objective function.',
+    answer:true, explain:'Centroids 3, 13.75, 26.5 reproduce the same assignment (fixed point), and SSE 63.25 &gt; 39.33 of the better partition. TRUE.' },
+  { topic:'q9', june:false,
+    text:'Before computing it, we can be certain that the simplified Silhouette of the individual observation A is the same in both candidate partitions P&#8321; = {A,B,E}, {C,D,H}, {F,G,I} and P&#8322; = {A,B,E}, {C,D,H,F}, {G,I}, because the cluster to which A belongs is unchanged in both partitions.',
+    answer:false, explain:'a(A) = 1 in both, but b(A) = distance to nearest OTHER centroid changes (9.67 vs 11.75) → s(A) = 0.897 vs 0.915. FALSE.' },
+  { topic:'q9', june:false,
+    text:'The candidate partition P&#8321; = {A,B,E}, {C,D,H,F}, {G,I} is better than the candidate partition P&#8322; = {A,B,E}, {C,D,H}, {F,G,I} in terms of their Sum of Squared Errors (SSE).',
+    answer:false, explain:'SSE 63.25 vs 39.33 — worse, not better. FALSE.' },
+];
+
+const JUNE_SCORE = 21.2;
+const STORAGE_KEY = 'dm583june.v1';
+
+// ---- grid figures ----
+function drawGrid(elId, pts, maxC){
+  const cell = 30, pad = 26, W = pad*2 + maxC*cell, H = pad*2 + maxC*cell;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${Math.min(W,360)}">`;
+  for (let i = 0; i <= maxC; i++){
+    const o = pad + i*cell;
+    s += `<line x1="${pad}" y1="${o}" x2="${W-pad}" y2="${o}" stroke="#E3E3DB"/>`;
+    s += `<line x1="${o}" y1="${pad}" x2="${o}" y2="${H-pad}" stroke="#E3E3DB"/>`;
+    if (i>0 && i<maxC){
+      s += `<text x="${o}" y="${H-pad+15}" font-size="9" text-anchor="middle" fill="#5A6172">${i}</text>`;
+      s += `<text x="${pad-9}" y="${H-pad-i*cell+3}" font-size="9" text-anchor="middle" fill="#5A6172">${i}</text>`;
+    }
+  }
+  for (const [name,[x,y]] of Object.entries(pts)){
+    const cx = pad + x*cell, cy = H - pad - y*cell;
+    s += `<circle cx="${cx}" cy="${cy}" r="9" fill="#fff" stroke="#1A1E28" stroke-width="1.3"/>`;
+    s += `<text x="${cx}" y="${cy+3.5}" font-size="10" font-weight="600" text-anchor="middle" fill="#1A1E28">${name}</text>`;
+  }
+  s += '</svg>';
+  document.getElementById(elId).innerHTML = s;
+}
+drawGrid('grid-q2', {A:[5,2],B:[1,7],C:[3,4],D:[6,6],E:[4,7],F:[5,5],G:[4,6],H:[3,7]}, 8);
+drawGrid('grid-q6', {S:[5,8],P:[2,7],Q:[6,7],R:[7,7],M:[3,6],N:[6,6],O:[7,6],I:[5,5],J:[6,5],K:[7,5],L:[8,5],G:[3,4],H:[5,4],E:[2,3],F:[4,3],B:[2,2],C:[3,2],D:[4,2],A:[3,1]}, 10);
+
+// dendrogram: {1,2}@2, {4,5}@6, 3+{4,5}@8, root@10
+(function(){
+  const X = {1:60, 2:120, 3:180, 4:240, 5:300};
+  const y = h => 190 - h*16;
+  const m12 = (X[1]+X[2])/2, m45 = (X[4]+X[5])/2;
+  const m345 = (X[3]+m45)/2, mroot = (m12+m345)/2;
+  let s = `<svg viewBox="0 0 360 215" width="330">`;
+  for (const h of [2,4,6,8,10])
+    s += `<text x="18" y="${y(h)+3}" font-size="9" fill="#5A6172" text-anchor="middle">${h}</text>
+          <line x1="28" y1="${y(h)}" x2="330" y2="${y(h)}" stroke="#F0F0E8"/>`;
+  const leaf = (x,label)=>`<line x1="${x}" y1="190" x2="${x}" y2="190" stroke="#1A1E28"/>
+      <text x="${x}" y="205" font-size="11" font-weight="600" text-anchor="middle" fill="#1A1E28">${label}</text>`;
+  const link = (x1,x2,h,d1,d2)=>`<line x1="${x1}" y1="${y(d1)}" x2="${x1}" y2="${y(h)}" stroke="#1A1E28" stroke-width="1.4"/>
+      <line x1="${x2}" y1="${y(d2)}" x2="${x2}" y2="${y(h)}" stroke="#1A1E28" stroke-width="1.4"/>
+      <line x1="${x1}" y1="${y(h)}" x2="${x2}" y2="${y(h)}" stroke="#1A1E28" stroke-width="1.4"/>`;
+  for (const l of [1,2,3,4,5]) s += leaf(X[l], l);
+  s += link(X[1], X[2], 2, 0, 0);
+  s += link(X[4], X[5], 6, 0, 0);
+  s += link(X[3], m45, 8, 0, 6);
+  s += link(m12, m345, 10, 2, 8);
+  s += '</svg>';
+  document.getElementById('dendro-q4').innerHTML = s;
+})();
+
+// ---- engine ----
+const root = document.getElementById('root');
+const sections = {};
+document.querySelectorAll('section.topic').forEach(s => sections[s.dataset.topic] = s);
+const topicMeta = {};
+document.querySelectorAll('section.topic').forEach(s => {
+  const items = QUESTIONS.filter(q => q.topic === s.dataset.topic).length;
+  topicMeta[s.dataset.topic] = {
+    pts: parseFloat(s.dataset.pts),
+    per: parseFloat(s.dataset.pts) / items,
+    name: s.querySelector('h2').textContent,
+    labels: s.dataset.labels,           // 'tf' or 'yn'
+  };
+});
+const LBL = { tf: {t:'TRUE', f:'FALSE'}, yn: {t:'YES', f:'NO'} };
+
+QUESTIONS.forEach((q, i) => {
+  const l = LBL[topicMeta[q.topic].labels];
+  const div = document.createElement('div');
+  div.className = 'q';
+  div.dataset.index = i;
+  div.innerHTML = `
+    <div class="q-text"><span>${q.text}</span><span class="delta"></span>
+      <div class="june-note"></div>
+      <div class="explain"></div></div>
+    <div class="btns">
+      <div class="b" data-v="true">${l.t}</div>
+      <div class="b" data-v="false">${l.f}</div>
+      <div class="b" data-v="blank">BLANK</div>
+    </div>`;
+  sections[q.topic].appendChild(div);
+});
+
+let answers = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') ?? new Array(QUESTIONS.length).fill(null);
+if (answers.length !== QUESTIONS.length) answers = new Array(QUESTIONS.length).fill(null);
+let checked = false;
+
+function paintSelections(){
+  document.querySelectorAll('.q').forEach(qDiv => {
+    const v = answers[+qDiv.dataset.index];
+    qDiv.querySelectorAll('.b').forEach(b => {
+      b.classList.toggle('sel', v !== null && String(v) === b.dataset.v);
+    });
+  });
+}
+paintSelections();
+
+root.addEventListener('click', e => {
+  const b = e.target.closest('.b');
+  if (!b || checked) return;
+  const qDiv = b.closest('.q');
+  const i = +qDiv.dataset.index;
+  const v = b.dataset.v === 'blank' ? 'blank' : b.dataset.v === 'true';
+  answers[i] = (answers[i] === v) ? null : v;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+  paintSelections();
+  progress();
+});
+
+function progress(){
+  const done = answers.filter(a => a !== null).length;
+  document.getElementById('fill').style.width = (done / QUESTIONS.length * 100) + '%';
+  if (!checked) document.getElementById('readout').innerHTML =
+    `<strong>${done}</strong> / ${QUESTIONS.length} decided`;
+}
+progress();
+
+const fmt = x => (Math.round(x * 10) / 10).toString();
+
+document.getElementById('checkBtn').addEventListener('click', () => {
+  if (checked) return;
+  const undecided = answers.filter(a => a === null).length;
+  if (undecided > 0 && !confirm(`${undecided} item(s) undecided — they will count as BLANK. Grade now?`)) return;
+  checked = true;
+
+  let total = 0, max = 0, nOk = 0, nBad = 0, nBlank = 0, lost = 0;
+  const perTopic = {};
+  for (const t in topicMeta) perTopic[t] = { score: 0, ok: 0, bad: 0, blank: 0 };
+
+  document.querySelectorAll('.q').forEach(qDiv => {
+    const i = +qDiv.dataset.index;
+    const q = QUESTIONS[i];
+    const meta = topicMeta[q.topic];
+    const per = meta.per;
+    const l = LBL[meta.labels];
+    max += per;
+    const v = answers[i];
+    let d = 0, cls;
+    if (v === null || v === 'blank') { cls = 'skip'; nBlank++; perTopic[q.topic].blank++; }
+    else if (v === q.answer) { d = per; cls = 'ok'; nOk++; perTopic[q.topic].ok++; }
+    else { d = -per; cls = 'bad'; nBad++; lost += per; perTopic[q.topic].bad++; }
+    total += d;
+    perTopic[q.topic].score += d;
+
+    qDiv.classList.add('revealed', cls);
+    qDiv.querySelector('.explain').textContent = q.explain.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    qDiv.querySelector('.delta').textContent =
+      cls === 'skip' ? '±0' : (d > 0 ? `+${fmt(d)}` : `−${fmt(-d)}`);
+    const jTxt = q.june === null ? 'BLANK (±0)' :
+      `${q.june ? l.t : l.f} ${q.june === q.answer ? `✓ (+${fmt(per)})` : `✗ (−${fmt(per)})`}`;
+    qDiv.querySelector('.june-note').textContent = `June 2026: you answered ${jTxt}`;
+    qDiv.querySelectorAll('.b').forEach(b => {
+      if (b.dataset.v === String(q.answer)) b.classList.add('truth');
+    });
+  });
+
+  const pct = total / max * 100;
+  document.getElementById('scoreBig').textContent = `${fmt(total)} / ${fmt(max)}  (${fmt(pct)}%)`;
+  const v = document.getElementById('verdict');
+  const pass = pct >= 50;
+  v.textContent = pass ? 'PASS at the ~50% bar.' : 'Below the ~50% bar.';
+  v.className = 'verdict ' + (pass ? 'pass' : 'fail');
+
+  let rows = '<table><tr><th>Question</th><th>✓</th><th>✗</th><th>—</th><th>Score</th><th>of</th><th>June</th></tr>';
+  const juneByTopic = {};
+  QUESTIONS.forEach(q => {
+    const per = topicMeta[q.topic].per;
+    juneByTopic[q.topic] = (juneByTopic[q.topic] ?? 0) +
+      (q.june === null ? 0 : q.june === q.answer ? per : -per);
+  });
+  for (const t in topicMeta) {
+    const r = perTopic[t];
+    rows += `<tr><td>${topicMeta[t].name}</td><td>${r.ok}</td><td>${r.bad}</td><td>${r.blank}</td>
+             <td>${fmt(r.score)}</td><td>${fmt(topicMeta[t].pts)}</td><td>${fmt(juneByTopic[t])}</td></tr>`;
+  }
+  rows += '</table>';
+  document.getElementById('breakdown').innerHTML = rows;
+
+  const jb = document.getElementById('junebox');
+  const delta = total - JUNE_SCORE;
+  jb.innerHTML = `June 2026 attempt scored <strong>${JUNE_SCORE}</strong>. ` +
+    (delta >= 0 ? `You improved by <strong>+${fmt(delta)}</strong> pts.` :
+                  `You are <strong>${fmt(delta)}</strong> pts BELOW the failed attempt.`) +
+    ` Dry-run target: ≥ 80 with zero ✗.`;
+
+  const cf = document.getElementById('counterfactual');
+  if (nBad > 0) {
+    cf.innerHTML = `Wrong answers cost <strong>−${fmt(lost)}</strong> pts. Blanking those ${nBad} item(s) → <strong>${fmt(total + lost)} / 100</strong>. Only answer what a tool computed.`;
+  } else {
+    cf.innerHTML = `Zero wrong answers — perfect calibration.${nBlank > 0 ? ` Convert the ${nBlank} blank(s) into computed answers next round.` : ' Full discipline, full board.'}`;
+  }
+
+  document.getElementById('readout').innerHTML =
+    `<strong>${fmt(total)} / 100</strong> · ${nOk}✓ ${nBad}✗ ${nBlank}— · June: ${JUNE_SCORE}`;
+  document.getElementById('fill').style.width = '100%';
+  document.getElementById('report').classList.add('show');
+  document.getElementById('report').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  document.getElementById('checkBtn').disabled = true;
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  checked = false;
+  answers = new Array(QUESTIONS.length).fill(null);
+  localStorage.removeItem(STORAGE_KEY);
+  document.querySelectorAll('.q').forEach(qDiv => {
+    qDiv.classList.remove('revealed', 'ok', 'bad', 'skip');
+    qDiv.querySelector('.delta').textContent = '';
+    qDiv.querySelector('.june-note').textContent = '';
+    qDiv.querySelectorAll('.b').forEach(b => b.classList.remove('sel', 'truth'));
+  });
+  document.getElementById('report').classList.remove('show');
+  document.getElementById('checkBtn').disabled = false;
+  progress();
+});
+</script>
+
+</body>
+</html>

@@ -22,6 +22,19 @@ def discrete_kernel(data: Vector, x: float, h: float, verbose: bool = True) -> f
     print(f"f({x:g}) = k/(n*h) = {k}/({n}*{h:g}) = {f} = {float(f):.6g}")
   return float(f)
 
+def density_report(data: Vector, queries: list[tuple]) -> list[float]:
+  """
+  One shot for a June-Q1-style question. queries: list of
+  ('kernel', x, h) / ('knn', x, k) tuples, evaluated in order with full work.
+  """
+  print(f"data (n={len(data)}): {sorted(data)}\n")
+  out = []
+  for kind, x, p in queries:
+    out.append(discrete_kernel(data, x, p) if kind == "kernel"
+               else knn_density(data, x, p))
+    print()
+  return out
+
 def knn_density(data: Vector, x: float, k: int,
                 include_self: bool = True, verbose: bool = True) -> float:
   """

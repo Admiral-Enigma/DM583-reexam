@@ -130,6 +130,6 @@ Supports: A5 B4 C5 D6 E1 F4 G5 · frequent 2-sets: AB3 AC3 AD4 CD4 CG3 DF4 DG3 �
 |---|---|---|---|---|---|---|---|---|---|-----------|
 | Score | −6 | −7 | +5 | +3.2 | +2 | +10 | 0 | 0 | +14 | **≈21.2/100** |
 
-21 ✅ · 16 ❌ · 1 ⬜. Earned +59.6, guesses cost −38.4 → **blanking all wrong answers ≈ 59.6 = pass** (bar ≈ 50).
+23 ✅ · 14 ❌ · 1 ⬜. Earned +59.6, guesses cost −38.4 → **blanking all wrong answers ≈ 59.6 = pass** (bar ≈ 50).
 
 *Conventions: inclusive kernel window V=h; tie-adjusted kNN density V=2r; support as count (matches σ=3); coordinates read from printed grids.*

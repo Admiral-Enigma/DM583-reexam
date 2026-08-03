@@ -76,6 +76,21 @@ def prunable(candidate, frequent_prev, verbose: bool = True) -> list[set]:
     print(f"  => {set(cand)} is {'PRUNED' if missing else 'kept (all subsets frequent)'}")
   return missing
 
+def conf_compare(db: DB, ante, cons, moved) -> tuple[Fraction, Fraction]:
+  """
+  Confidence monotonicity check (June Q8.1): moving items `moved` from the
+  antecedent to the consequent can only LOWER (or keep) the confidence:
+  conf(A\\M => C u M) <= conf(A => C). Prints both as fractions.
+  """
+  A, C, M = set(ante), set(cons), set(moved)
+  c1 = Fraction(support(db, A | C), support(db, A))
+  A2, C2 = A - M, C | M
+  c2 = Fraction(support(db, A2 | C2), support(db, A2))
+  rel = "<=" if c2 <= c1 else "> (!!)"
+  print(f"  conf({sorted(A)}=>{sorted(C)}) = {c1} = {float(c1):.4f}")
+  print(f"  conf({sorted(A2)}=>{sorted(C2)}) = {c2} = {float(c2):.4f}   {rel}")
+  return c1, c2
+
 def is_closed(db: DB, itemset) -> bool:
   "Closed = frequent itemset with NO superset of the SAME support."
   s0 = support(db, itemset)

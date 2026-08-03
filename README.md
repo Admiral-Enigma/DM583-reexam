@@ -38,12 +38,21 @@ reach-dists, lrd, LOF) and DBSCAN core/border/noise per (ε, MinPts).
 | §1.5 GMM M-step | `mstep1d(xs, gammas)` — Σγ, prior, μ, σ² with explicit numerators/denominators |
 | §1.5 parameter count | `param_count(k, d)` |
 | §1.6 simplified silhouette | `simp_silhouette(data, labels)` — per-point a, b, s |
+| §1.1 one-shot density (Q1 style) | `density_report(data, [("kernel", 4, 1), ("knn", 7, 2)])` |
+| §1.4 dendrogram cut at a level | `cut_height(D, "single", 4, labels=[...])` — strict <, flags == |
+| §1.5 hard partition / claim check | `hard_partition(gammas)`, `check_claim("mu1", mu, 14.2/3.8)` |
+| Q8-style confidence monotonicity | `conf_compare(db, "AD", "C", moved="D")` |
+| Q9-style k-Means trace | `kmeans_trace({"A": 2, ...}, [2, 4.5, 6])` — named clusters + iteration count |
+| Q9-style partition compare | `analyze_partitions(data, {"P1": [[...]]}, compare_point="A")` — SSE, fixed point, trap flag |
 | MLE Gaussian | `mle(data)` — /n not /(n−1), shown |
 | E-step / posteriors | `responsibilities(densities, priors)`, `estep(...)`, `mstep(...)` |
 | Distances etc. | `eucd, mand, supd, mink, cosine, smc, jaccard, mahalanobis, proxmat, zscore, ...` |
 | k-Means / DBSCAN | `kmeans(data, init)`, `sse(...)`, `dbscan(data, eps, minpts)`, `silhouette(...)` |
 
 Apriori from a CSV (like `data/transactions.csv`): `uv run apriori-csv`.
+
+Practice: `practice/june2026.html` (exact June replay, ± scoring, June comparison) and
+`practice/simulator.html` (40 fresh drill items, BLANK + ± scoring).
 
 ## Checks
 

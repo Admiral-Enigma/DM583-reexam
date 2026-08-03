@@ -18,6 +18,15 @@ The scoring is symmetric (+p / −p / 0). A random guess has expected value 0, b
 
 ## 1. Tools to develop
 
+> **STATUS 2026-08-03: BUILT — single package `src/exam/`** (uv-managed; `uv run python`
+> → `from exam import *` gives everything in one REPL; see README.md for the tool map).
+> The standalone `tools/` dir was merged into the package and deleted. Functions added in
+> the merge: `kmeans_trace` (named-point Lloyd trace + iteration count), `analyze_partitions`
+> (SSE + fixed-point/trap check + silhouette comparison), `cut_height` (dendrogram cut at a
+> level, June Q4.5 style), `hard_partition`, `check_claim`, `conf_compare`, `density_report`.
+> `uv run pytest` (24 tests) includes June-exam replays: Q1 3/20·7/80·1/40·1/5; Q4 cut@4 →
+> four clusters; Q8 conf monotonicity; Q9 3 iters·trap·SSE 39.33/63.25.
+
 The existing library (`dist.py`, `cluster.py`, `outliers.py`, `freq.py`, `gmm.py`, `prob.py`) is nearly complete algorithmically. The gaps are (a) one missing topic, (b) drivers that make the tools usable in exam time, (c) output that "shows work" so answers can be checked against claimed values.
 
 ### 1.1 `density.py` — non-parametric density estimation ⟵ **only genuinely missing algorithm (−9 pts)**
@@ -59,6 +68,30 @@ The Q2/Q6-style questions give ~8–19 points on a grid. The blocker in June was
 ### 1.7 Packaging
 
 - Everything importable from one REPL session: `from exam import *`. Rehearse a 2-minute warm-up: open REPL, paste a dataset, get a distance matrix. Speed is the point.
+
+## 1.8 Borrow from chhan24's code (`chhan24_code/datamining/`)
+
+Analysis 2026-08-03. What his library covers that ours didn't, and what to watch out for:
+
+**Adopt (fills our PLAN gaps directly):**
+
+- `knn_density.py` → covers §1.1: discrete kernel + kNN density with tie-adjusted k and d-dim ball volume (1-D V=2r via the gamma-function formula — verified correct). Missing from his version: fraction output and window/points printout; add those when porting.
+- `k_means.py` → covers §1.6 and more: per-point **simplified silhouette**, fixed-point/stability check ("would k-means be trapped here?"), SSE ranking of named partitions, Lloyd simulation with per-iteration printout. Best single file in his repo — adopt nearly verbatim.
+- `EM_GMM.py` → covers most of §1.5: full M-step (N_k, π, μ, σ²) with explicit numerator/denominator printout plus a `check_claim()` helper that directly tests exam statements. Add `param_count()` ourselves.
+- `Apriori.py` → `can_prune()`/`prune_candidates()` covers §1.3's prunable(); his doesn't name the missing subset — ours should.
+- `Distance_mesure.py` / `cosine_check.py` → pattern worth copying: encode a theory claim as a numeric experiment (e.g. Mahalanobis vs Euclidean under a given Σ, cosine under 0-0 padding). Kills Q3-type doubt in seconds.
+
+**Do NOT blindly trust:**
+
+- His `kNN.py` drops ALL zero distances (`if dist != 0`) — silently wrong if the dataset contains duplicate points.
+- His `knn_density` counts the query point itself when the query coincides with a data point (distance 0 is ≤ r) — convention differs from "density at x from the sample"; his own `__main__` example prints `Correct = False` because of this.
+- His `DBSCAN.py` hardcodes Euclidean — June's exam was Manhattan. Needs a metric parameter (ours has one).
+- His `AHC.py` is a scipy plot wrapper — fine for topology, useless for exact merge heights. Our `cluster.ahc` printing heights stays the primary tool; §1.4's `match_dendrogram` is still unbuilt in both repos.
+- `Points.py` is 2-D only (x, y attributes).
+
+**Still missing in BOTH repos:** ~~`exam.py` one-shot grid driver (§1.2), dendrogram matcher (§1.4), `param_count()` (§1.5)~~ — all built in `tools/` on 2026-08-03.
+
+**Practice simulator:** his `practice/main.html` (~80 T/F items, MathJax, localStorage). Ours: `practice/simulator.html` — 40 fresh script-verified items with a **BLANK option and real exam ± scoring** plus a counterfactual "score if you had blanked your wrong answers" report. Drills the calibration skill that decided June, not just recall.
 
 ## 2. Topics to study hard (ranked)
 

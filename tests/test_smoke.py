@@ -90,3 +90,38 @@ def test_simp_silhouette():
 def test_mle():
   mu, s2 = mle([1, 2, 3])
   assert mu == 2 and abs(s2 - 2/3) < 1e-12  # /n, not /(n-1)
+
+# ---- merged from tools/ (June 2026 replays) ----
+
+JUNE_Q9 = dict(A=2, B=4, C=10, D=12, E=3, F=20, G=28, H=13, I=25)
+
+def test_kmeans_trace_june_q9():
+  clusters, iters = kmeans_trace(JUNE_Q9, [2, 4.5, 6], verbose=False)
+  assert iters == 3
+  assert clusters == [["A", "B", "E"], ["C", "D", "H"], ["F", "G", "I"]]
+
+def test_analyze_partitions_trap_june_q9():
+  parts = {"P1": [["A", "B", "E"], ["C", "D", "H"], ["F", "G", "I"]],
+           "P2": [["A", "B", "E"], ["C", "D", "H", "F"], ["G", "I"]]}
+  res = analyze_partitions(JUNE_Q9, parts, compare_point="A")
+  assert abs(res["P1"][0] - 39 - 1/3) < 1e-9 and res["P1"][1] is True
+  assert abs(res["P2"][0] - 63.25) < 1e-9 and res["P2"][1] is True  # the trap
+
+def test_cut_height_june_q4():
+  D = [[0, 2, 14, 22, 18], [2, 0, 10, 18, 16], [14, 10, 0, 8, 10],
+       [22, 18, 8, 0, 6], [18, 16, 10, 6, 0]]
+  cl = cut_height(D, "single", 4, labels=["1", "2", "3", "4", "5"])
+  assert cl == [("1", "2"), ("3",), ("4",), ("5",)]  # four clusters, not three
+
+def test_hard_partition():
+  assert hard_partition([[0.9, 0.1], [0.3, 0.7]], verbose=False) == [1, 2]
+
+def test_conf_compare_june_q8():
+  db = parse_db("A,B,C,D / A,C,D,F / A,C,D,E,G / A,B,D,F / B,C,G / D,F,G / A,B,G / C,D,F,G")
+  c1, c2 = conf_compare(db, "AD", "C", moved="D")
+  assert c2 <= c1  # conf(A=>CD) <= conf(AD=>C)
+
+def test_density_report_june_q1():
+  data = [1, 1, 2, 2, 3, 4, 4, 4, 5, 5, 5, 5, 6, 9, 9, 10, 10, 10, 10, 11]
+  r = density_report(data, [("kernel", 4, 1), ("knn", 7, 2), ("knn", 7, 1), ("kernel", 4, 2)])
+  assert [abs(a - b) < 1e-12 for a, b in zip(r, [3/20, 7/80, 1/40, 1/5])] == [True]*4
