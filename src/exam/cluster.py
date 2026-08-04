@@ -61,33 +61,44 @@ def simp_silhouette(data: Matrix, labels: Vector, d=eucd, verbose: bool = True) 
     print(f"  mean simplified silhouette = {sum(ss)/len(ss):.4f}")
   return ss
 
-def _named_1d(data) -> dict[str, float]:
-  "Accept {'A': 2, ...} or a plain list (auto-named A, B, C, ...)."
-  if isinstance(data, dict):
-    return dict(data)
-  return {chr(ord("A") + i): v for i, v in enumerate(data)}
+def _named_1d(data) -> dict[str, tuple]:
+  """Accept {'A': 2}, {'A': (1, 2)}, or a plain list (auto-named A, B, C, ...).
+  Values are normalised to tuples, so every helper works in any dimension."""
+  if not isinstance(data, dict):
+    data = {chr(ord("A") + i): v for i, v in enumerate(data)}
+  return {k: tuple(v) if isinstance(v, (list, tuple)) else (v,)
+          for k, v in data.items()}
+
+def _vmean(cl, data):
+  return tuple(sum(data[p][d] for p in cl)/len(cl) for d in range(len(next(iter(data.values())))))
+
+def _vd(a, b):
+  return sum((x - y)**2 for x, y in zip(a, b))**.5
+
+def _vfmt(v):
+  return round(v[0], 4) if len(v) == 1 else tuple(round(x, 4) for x in v)
 
 def kmeans_trace(data, init, max_iter: int = 50, verbose: bool = True):
   """
-  1-D k-Means (Lloyd) with NAMED points and the full trace shown — for the
-  'converges in exactly N iterations' subs (June Q9.1).
-  data: {'A': 2, 'B': 4, ...} or a list; init: initial centroids.
-  One iteration = assign all points, then update centroids. Returns
-  (clusters, n_changing_iterations); the run stops when an iteration
-  reproduces the previous assignment.
+  k-Means (Lloyd) with NAMED points and the full trace shown — for the
+  'converges in exactly N iterations' subs (June Q9.1). Works in 1-D or n-D:
+  data: {'A': 2, ...} or {'A': (1, 2), ...} or a list; init: initial centroids
+  (scalars in 1-D, tuples in n-D). One iteration = assign all points, then
+  update centroids. Returns (clusters, n_changing_iterations); the run stops
+  when an iteration reproduces the previous assignment.
   """
   data = _named_1d(data)
-  cents, prev = list(init), None
+  cents = [tuple(c) if isinstance(c, (list, tuple)) else (c,) for c in init]
+  prev = None
   if verbose:
-    print(f"k-means from centroids {list(init)}:")
+    print(f"k-means from centroids {[_vfmt(c) for c in cents]}:")
   for it in range(1, max_iter + 1):
-    assign = {p: min(range(len(cents)), key=lambda j: abs(v - cents[j]))
+    assign = {p: min(range(len(cents)), key=lambda j: _vd(v, cents[j]))
               for p, v in data.items()}
     clusters = [sorted(p for p in data if assign[p] == j) for j in range(len(cents))]
-    cents = [sum(data[p] for p in cl)/len(cl) if cl else cents[j]
-             for j, cl in enumerate(clusters)]
+    cents = [_vmean(cl, data) if cl else cents[j] for j, cl in enumerate(clusters)]
     if verbose:
-      print(f"  iter {it}: {clusters} -> centroids {[round(c, 4) for c in cents]}")
+      print(f"  iter {it}: {clusters} -> centroids {[_vfmt(c) for c in cents]}")
     if clusters == prev:
       if verbose:
         print(f"  converged: {it - 1} iteration(s) changed the assignment "
@@ -97,22 +108,57 @@ def kmeans_trace(data, init, max_iter: int = 50, verbose: bool = True):
   if verbose: print("  did NOT converge within max_iter")
   return prev, max_iter
 
+def silhouette_point(data, partition, point, verbose: bool = True):
+  """
+  BOTH silhouettes of one named observation (Exercise 3-5 style):
+  full SWC   : a = avg dist to OTHER members of own cluster,
+               b = min over other clusters of avg dist to their members;
+  simplified : a = dist to own centroid, b = min dist to another centroid.
+  data: {'A': 2 or (x, y), ...}; partition: list of name-lists.
+  Returns (s_full, s_simplified).
+  """
+  data = _named_1d(data)
+  own = next(cl for cl in partition if point in cl)
+  others = [cl for cl in partition if point not in cl]
+  mates = [p for p in own if p != point]
+  a_f = sum(_vd(data[point], data[p]) for p in mates)/len(mates) if mates else 0.0
+  bs_f = {tuple(cl): sum(_vd(data[point], data[p]) for p in cl)/len(cl) for cl in others}
+  b_f = min(bs_f.values())
+  s_f = 0.0 if max(a_f, b_f) == 0 else (b_f - a_f)/max(a_f, b_f)
+  a_s = _vd(data[point], _vmean(own, data))
+  bs_s = {tuple(cl): _vd(data[point], _vmean(cl, data)) for cl in others}
+  b_s = min(bs_s.values())
+  s_s = 0.0 if max(a_s, b_s) == 0 else (b_s - a_s)/max(a_s, b_s)
+  if verbose:
+    print(f"silhouettes of {point} (own cluster {sorted(own)}):")
+    print(f"  FULL:       a = avg dist to own mates = {a_f:.4f}")
+    for cl, b in bs_f.items():
+      print(f"              avg dist to {sorted(cl)} = {b:.4f}")
+    print(f"              b = {b_f:.4f}  ->  s = (b-a)/max(a,b) = {s_f:.5f}")
+    print(f"  SIMPLIFIED: a = dist to own centroid = {a_s:.4f}")
+    for cl, b in bs_s.items():
+      print(f"              dist to centroid of {sorted(cl)} = {b:.4f}")
+    print(f"              b = {b_s:.4f}  ->  s = {s_s:.5f}")
+    if len(own) == 1:
+      print("              (singleton: a = 0 -> s = 1 under both definitions)")
+  return s_f, s_s
+
 def is_fixed_point(data, partition, verbose: bool = True) -> bool:
   """
   Would Lloyd's reassignment step change this 1-D partition? True = k-Means is
   trapped here if it ever arrives (June Q9.2). partition: list of name-lists.
   """
   data = _named_1d(data)
-  cents = [sum(data[p] for p in cl)/len(cl) for cl in partition]
+  cents = [_vmean(cl, data) for cl in partition]
   stable = True
   for i, cl in enumerate(partition):
     for p in cl:
-      best = min(range(len(cents)), key=lambda j: abs(data[p] - cents[j]))
-      if abs(data[p] - cents[best]) < abs(data[p] - cents[i]) - 1e-12:
+      best = min(range(len(cents)), key=lambda j: _vd(data[p], cents[j]))
+      if _vd(data[p], cents[best]) < _vd(data[p], cents[i]) - 1e-12:
         stable = False
         if verbose:
-          print(f"  {p} would move: |{data[p]:g} - {cents[i]:.4g}| > "
-                f"|{data[p]:g} - {cents[best]:.4g}|")
+          print(f"  {p} would move: d({_vfmt(data[p])}, {_vfmt(cents[i])}) > "
+                f"d({_vfmt(data[p])}, {_vfmt(cents[best])})")
   if verbose: print(f"  fixed point of Lloyd's algorithm: {stable}")
   return stable
 
@@ -130,10 +176,10 @@ def analyze_partitions(data, partitions: dict, compare_point: str | None = None)
     print(f"--- {name}: {part}")
     total = 0.0
     for cl in part:
-      c = sum(data[p] for p in cl)/len(cl)
-      s = sum((data[p] - c)**2 for p in cl)
+      c = _vmean(cl, data)
+      s = sum(_vd(data[p], c)**2 for p in cl)
       total += s
-      print(f"  {sorted(cl)}: centroid {c:.4g}, SSE {s:.4g}")
+      print(f"  {sorted(cl)}: centroid {_vfmt(c)}, SSE {s:.4g}")
     print(f"  total SSE = {total:.4g}")
     stable = is_fixed_point(data, part)
     results[name] = (total, stable)
@@ -147,16 +193,75 @@ def analyze_partitions(data, partitions: dict, compare_point: str | None = None)
   if compare_point:
     print(f"\nsimplified silhouette of {compare_point}:")
     for name, part in partitions.items():
-      cents = [sum(data[p] for p in cl)/len(cl) for cl in part]
+      cents = [_vmean(cl, data) for cl in part]
       own = next(i for i, cl in enumerate(part) if compare_point in cl)
-      a = abs(data[compare_point] - cents[own])
-      b = min(abs(data[compare_point] - cents[i]) for i in range(len(cents)) if i != own)
+      a = _vd(data[compare_point], cents[own])
+      b = min(_vd(data[compare_point], cents[i]) for i in range(len(cents)) if i != own)
       s = 0.0 if max(a, b) == 0 else (b - a)/max(a, b)
       single = "   (singleton: a=0 -> s=1)" if len(part[own]) == 1 else ""
       print(f"  in {name}: a = {a:.4g}, b = {b:.4g} -> s = {s:.4f}{single}")
   return results
 
 # ---------- agglomerative hierarchical ----------
+
+def pairmat(text: str, verbose: bool = True):
+  """
+  Build a square distance matrix from PAIRWISE distances pasted straight from
+  an exam sheet, e.g.:
+      pairmat("d(1,2)=4 d(1,3)=10 d(1,4)=20 d(1,5)=18 d(2,3)=8 "
+              "d(2,4)=18 d(2,5)=16 d(3,4)=12 d(3,5)=14 d(4,5)=6")
+  Any separators work — numbers are read in triples (i, j, distance), labels
+  1-based. Returns (D, labels) ready for ahc_all / match_dendrogram / cut_height.
+  """
+  import re
+  nums = [float(x) for x in re.findall(r"-?\d+(?:\.\d+)?", text)]
+  if len(nums) % 3:
+    raise ValueError(f"read {len(nums)} numbers — not divisible into (i, j, d) triples")
+  triples = [(int(nums[k]), int(nums[k+1]), nums[k+2]) for k in range(0, len(nums), 3)]
+  n = max(max(i, j) for i, j, _ in triples)
+  D = [[0.0]*n for _ in range(n)]
+  seen = set()
+  for i, j, d in triples:
+    D[i-1][j-1] = D[j-1][i-1] = d
+    seen.add(frozenset((i, j)))
+  missing = [(i, j) for i in range(1, n+1) for j in range(i+1, n+1)
+             if frozenset((i, j)) not in seen]
+  if missing:
+    print(f"  WARNING: {len(missing)} pair(s) missing (left as 0): {missing}")
+  labels = [str(i) for i in range(1, n+1)]
+  if verbose:
+    print(f"n = {n}, {len(triples)} pairs (expected {n*(n-1)//2})")
+    for l, row in zip(labels, D):
+      print(f"  {l}: {[round(x, 4) if x % 1 else int(x) for x in row]}")
+  return D, labels
+
+def sqmat(text: str, verbose: bool = True):
+  """
+  Parse a SQUARE distance matrix pasted row by row (rows split on '/' or
+  newlines), e.g. June 2026 Q4:
+      sqmat("0 2 14 22 18 / 2 0 10 18 16 / 14 10 0 8 10 / 22 18 8 0 6 / 18 16 10 6 0")
+  Validates: square, zero diagonal, symmetric — and reports any violation
+  (the transcription guard). Returns (D, labels) with labels '1'..'n'.
+  """
+  rows = [[float(x) for x in r.replace(",", " ").split()]
+          for r in text.replace("/", "\n").splitlines() if r.split()]
+  n = len(rows)
+  bad = [len(r) for r in rows if len(r) != n]
+  if bad:
+    raise ValueError(f"{n} rows but row lengths {[len(r) for r in rows]} — not square")
+  for i in range(n):
+    if rows[i][i] != 0:
+      print(f"  WARNING: diagonal D[{i+1}][{i+1}] = {rows[i][i]:g}, expected 0 — typo?")
+    for j in range(i+1, n):
+      if rows[i][j] != rows[j][i]:
+        print(f"  WARNING: D[{i+1}][{j+1}] = {rows[i][j]:g} but D[{j+1}][{i+1}] = "
+              f"{rows[j][i]:g} — not symmetric, typo?")
+  labels = [str(i) for i in range(1, n+1)]
+  if verbose:
+    print(f"{n}x{n} matrix OK" if not bad else "")
+    for l, r in zip(labels, rows):
+      print(f"  {l}: {[int(x) if not x % 1 else x for x in r]}")
+  return rows, labels
 
 AHC_METHODS = ("single", "complete", "average", "ward")
 

@@ -84,7 +84,9 @@ DBSCAN (Q6):       analyze("A 2 4 / B 4 4 / ...", "man", db=[(2, 6), (2, 4), (2,
                    (point counts itself; res["dbscan(2,6)"]["S"] -> (cluster_id, "border"))
 DENSITY (Q1):      discrete_kernel(data, x=4, h=1)    knn_density(data, x=7, k=2)
   one shot:        density_report(data, [("kernel", 4, 1), ("knn", 7, 2)])
-AHC (Q4):          D = proxmat(pts, mand)  or paste the matrix as list of rows
+AHC (Q4):          D, labels = sqmat("0 2 14 22 18 / 2 0 10 18 16 / ...")  # paste matrix rows
+                   D, labels = pairmat("d(1,2)=4 d(1,3)=10 ...")           # or pairwise form
+                   (both validate the input; or D = proxmat(pts, mand) from coordinates)
                    ahc_all(D, labels=["1","2","3","4","5"])
   figure match:    match_dendrogram(D, [2, 6, 8, 10])     # scale verdict per linkage
   cut at level:    cut_height(D, "single", 4, labels=[...])
@@ -98,9 +100,14 @@ SIMILARITY (Q3):   dist_compare([[1,2],[2,1]])    # Mah vs Euc/Man/Sup per point
 GMM (Q7):          mstep1d(xs, gammas)            # gammas rows=points: [[.9,.1], ...]
                    hard_partition(gammas)         param_count(k=2, d=1)
                    check_claim("mu1", computed, 14.2/3.8)
-K-MEANS (Q9):      data = dict(A=2, B=4, ...)
+  E-step:          responsibilities([0.0086, 0.0136], [0.3, 0.7])  # densities, priors -> posteriors
+                   gauss(x, mu, var)              # component density if only params given
+  MLE:             mle(data)                      # sample mean + variance/n (NOT n-1)
+APRIORI EXTRAS:    apriori_full(db, min_sup)      # + MAXIMAL and CLOSED lists + all rules
+K-MEANS (Q9):      data = dict(A=2, B=4, ...)    # 2-D: dict(A=(1,2), B=(2,1), ...)
                    kmeans_trace(data, [2, 4.5, 6])          # iterations + final clusters
                    analyze_partitions(data, {"P1": [["A","B"], ...]}, compare_point="A")
+                   silhouette_point(data, [["A","B"], ["C"]], "A")  # FULL + simplified s(A)
 RULES: answer only what a tool printed. Recall < 75% sure -> BLANK. help(fn) for details.""")
 
 def check_order(order: str, scores: dict, strict: bool = False) -> bool:

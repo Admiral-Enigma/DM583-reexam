@@ -121,6 +121,21 @@ def test_conf_compare_june_q8():
   c1, c2 = conf_compare(db, "AD", "C", moved="D")
   assert c2 <= c1  # conf(A=>CD) <= conf(AD=>C)
 
+EX3 = {str(i+1): v for i, v in enumerate(
+  [(1,2),(2,1),(1,1),(2,2),(8,9),(9,8),(9,9),(8,8),(1,15),(2,15),(1,14),(2,14)])}
+
+def test_kmeans_trace_2d_exercise31():
+  clusters, iters = kmeans_trace(EX3, [(6,6),(4,6),(5,10)], verbose=False)
+  assert iters == 2
+  assert clusters == [["5","6","7","8"], ["1","2","3","4"],
+                      ["10","11","12","9"]]
+
+def test_silhouette_point_exercise35():
+  part = [["1","2","3","4"], ["5","6","7","8"], ["9","10","11","12"]]
+  s_full, s_simp = silhouette_point(EX3, part, "12", verbose=False)
+  assert abs(s_full - 0.86657) < 1e-4   # exercise sheet: SWC contribution
+  assert abs(s_simp - 0.9169545) < 1e-6 # exercise sheet: SSWC contribution
+
 def test_dist_compare_june_q3():
   assert dist_compare([[1, 2], [2, 1]]) is False   # Q3.1: Mah != Euc
   assert dist_compare([[1, 0], [0, 1]]) is True    # Sigma = I -> equal

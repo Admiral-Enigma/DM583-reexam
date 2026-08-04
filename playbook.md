@@ -20,6 +20,33 @@ Companion to `walkthrough.md` (the graded post-mortem). Dry-run 2026-08-03: **86
 5. "Corresponds to a dendrogram" = topology **AND** merge heights.
 6. Mahalanobis = Euclidean **iff** Σ = I; average linkage needs cluster **sizes** (Lance–Williams), single/complete don't.
 
+Extra facts from the official sample MCQ (theory subs the June exam didn't use):
+
+7. EM-GMM **uses Bayes' rule** (the E-step is Bayes); it IS sensitive to initialization (local optima, like k-means).
+8. Full-covariance GMM does NOT assume independence within clusters. Diagonal Σ ⇒ axis-aligned **ellipses**; spherical only if all variances are equal.
+9. In 1-D, all Minkowski distances (p=1, 2, ∞, …) coincide.
+10. DBSCAN with MinPts = 1: every point is core ⇒ **noise is impossible**, isolated points become singleton clusters. Raising to MinPts = 2 can turn them into noise.
+11. Maximal = frequent with NO frequent superset. Closed = NO superset with the SAME support. `apriori_full(db, σ)` prints both lists.
+12. MLE for a single Gaussian: sample mean, variance with **/n** (not n−1) — `mle(data)`.
+13. E-step numeric subs (densities + priors → posteriors): `responsibilities([d1, d2], [pi1, pi2])`.
+
+From Exercise 3 (partitioning):
+
+14. Squared vs standard Euclidean in k-Means: **same partition** (monotone transform — closest centroid unchanged). k-Means' objective is defined on the squared version.
+15. Parallel/distributed k-Means is EXACT: each site sends per-cluster (count, coordinate-sum); central node computes centroids as Σsums/Σcounts. No even-data-split requirement, no approximation.
+16. Incremental centroid update: v_new = (|C|·v + Σjoining − Σleaving) / (|C| + #join − #leave).
+17. Per-point silhouettes, both versions: `silhouette_point(data, partition, "12")` — full SWC (avg distances to members) AND simplified (centroid distances). `kmeans_trace`/`analyze_partitions` also take 2-D points: `{'1': (1,2), ...}`, init `[(6,6),(4,6),(5,10)]`.
+18. Elbow method: SSE knee. SWC method: **maximum peak**, and SWC is undefined for k=1 (start at k=2).
+
+From chhan24's drill bank (recall-only items, no tool needed):
+
+19. Single/complete linkage have **no inversions** — merge heights are non-decreasing. Single-link suffers **chaining** (elongated clusters via close intermediate points); complete-link resists it (max distance). **Ward** merges the pair with the smallest increase in total within-cluster SSE.
+20. Kernel bandwidth: h → 0 undersmooths — spiky, HIGH variance; large h oversmooths — high bias (bias-variance tradeoff). kNN density is **locally adaptive**: r shrinks in dense regions, grows in sparse ones.
+21. kNN outlier score with larger k = smoother/more global, LESS sensitive to tiny local fluctuations. LOF ≈ 1 → normal point; LOF ≫ 1 → outlier; a point with a SMALL kNN-distance can still have HIGH LOF (its neighbours sit in much denser surroundings — LOF is relative density).
+22. k-Means: one Lloyd iteration is O(n·k·d); guaranteed to terminate finitely (SSE never increases, finitely many partitions); a centroid need NOT be a data point; favors compact/convex, similar-size clusters — fails on elongated/varied-density shapes.
+23. EM-GMM: no fixed iteration bound exists (only monotone likelihood ascent); initializing components IDENTICALLY is a degenerate fixed point — they stay identical, symmetry never breaks; GMMs approximate any continuous density as K → ∞.
+24. Cosine similarity: [0,1] for non-negative data (TF-IDF, one-hot); [−1,1] in general. Minkowski p=1 Manhattan, p=2 Euclidean, p→∞ Chebyshev/supremum.
+
 ---
 
 ## Q1 · Density estimation (12 pts, ±3)
@@ -88,9 +115,11 @@ Caveat: numeric tests **prove False** by counterexample; for "necessarily True" 
 Figure: {1,2}@2 · {4,5}@6 · 3+{4,5}@8 · root@10.
 
 ```python
-D = [[0,2,14,22,18],[2,0,10,18,16],[14,10,0,8,10],[22,18,8,0,6],[18,16,10,6,0]]
-match_dendrogram(D, [2,6,8,10], labels=["1","2","3","4","5"])
-cut_height(D, "single", 4, labels=["1","2","3","4","5"])
+D, labels = sqmat("0 2 14 22 18 / 2 0 10 18 16 / 14 10 0 8 10 / 22 18 8 0 6 / 18 16 10 6 0")
+# paste rows as printed — validates square/diagonal/SYMMETRY (catches typos);
+# pairwise form instead: D, labels = pairmat("d(1,2)=2 d(1,3)=14 ...")
+match_dendrogram(D, [2,6,8,10], labels=labels)
+cut_height(D, "single", 4, labels=labels)
 ```
 
 Computed heights: single **2,6,8,10** · complete 2,6,10,22 · average 2,6,9,16.33. All three share the figure's topology (same merge partners in the printed sequences).
